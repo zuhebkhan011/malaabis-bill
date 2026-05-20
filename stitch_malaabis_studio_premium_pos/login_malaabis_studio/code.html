@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Malaabis Studio - Staff Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#99907c",
+                        "secondary": "#c6c6c7",
+                        "on-primary-container": "#554300",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "inverse-surface": "#e2e2e2",
+                        "primary-fixed": "#ffe088",
+                        "on-tertiary-container": "#454545",
+                        "primary-container": "#d4af37",
+                        "surface-tint": "#e9c349",
+                        "inverse-on-surface": "#303030",
+                        "on-primary-fixed": "#241a00",
+                        "primary-fixed-dim": "#e9c349",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-dim": "#131313",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "surface-bright": "#393939",
+                        "surface-container-highest": "#353535",
+                        "on-primary": "#3c2f00",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "surface-container": "#1f1f1f",
+                        "on-primary-fixed-variant": "#574500",
+                        "surface-container-low": "#1b1b1b",
+                        "on-secondary-container": "#b4b5b5",
+                        "on-error": "#690005",
+                        "tertiary": "#d0cecd",
+                        "surface-variant": "#353535",
+                        "outline-variant": "#4d4635",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "inverse-primary": "#735c00",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#454747",
+                        "tertiary-fixed": "#e5e2e1",
+                        "on-surface-variant": "#d0c5af",
+                        "surface-container-high": "#2a2a2a",
+                        "on-secondary": "#2f3131",
+                        "on-secondary-fixed-variant": "#454747",
+                        "on-error-container": "#ffdad6",
+                        "primary": "#f2ca50",
+                        "secondary-fixed": "#e2e2e2",
+                        "tertiary-container": "#b5b2b2",
+                        "on-background": "#e2e2e2",
+                        "background": "#131313",
+                        "on-surface": "#e2e2e2",
+                        "surface": "#131313",
+                        "on-tertiary": "#313030"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "gutter": "16px",
+                        "touch-target-min": "48px",
+                        "container-margin": "24px",
+                        "section-gap": "40px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Playfair Display"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Playfair Display"],
+                        "label-caps": ["Inter"],
+                        "headline-lg": ["Playfair Display"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000000 100%);
+            background-attachment: fixed;
+        }
+        .input-active:focus-within {
+            border-color: #D4AF37 !important;
+            box-shadow: 0 1px 0 0 #D4AF37 !important;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col items-center justify-center p-container-margin md:p-section-gap font-body-md antialiased selection:bg-primary/30 selection:text-primary">
+<main class="w-full max-w-md mx-auto flex flex-col items-center gap-12 animate-fade-in-up">
+<!-- Brand Identity -->
+<header class="text-center flex flex-col items-center gap-4 w-full">
+<div class="h-24 w-24 rounded-full bg-surface-container flex items-center justify-center border border-primary/30 shadow-lg relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<span class="material-symbols-outlined text-[48px] text-primary" style="font-variation-settings: 'FILL' 1;">
+                    stars
+                </span>
+</div>
+<div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary tracking-widest text-center mt-6">MALAABIS</h1>
+<p class="font-label-caps text-label-caps text-outline tracking-[0.2em] mt-2">STUDIO</p>
+</div>
+</header>
+<!-- Login Card -->
+<section class="w-full bg-[#121212] rounded-xl border border-outline/20 p-6 md:p-8 shadow-2xl relative overflow-hidden backdrop-blur-sm">
+<!-- Subtle Gold Accent -->
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+<div class="mb-8 text-center">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">Staff Login</h2>
+<p class="font-body-md text-body-md text-secondary">Authenticate to access store management.</p>
+</div>
+<form class="flex flex-col gap-6 w-full" onsubmit="event.preventDefault();">
+<!-- Username Input -->
+<div class="relative group input-active">
+<label class="absolute -top-2 left-3 bg-[#121212] px-1 font-label-caps text-label-caps text-outline group-focus-within:text-primary transition-colors z-10" for="username">USERNAME</label>
+<input class="w-full bg-[#1C1C1C] border border-outline-variant rounded-lg px-4 py-4 text-on-surface focus:outline-none focus:ring-0 focus:border-primary transition-colors font-body-md h-[56px]" id="username" name="username" placeholder="Enter staff ID or email" type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none">
+                        person
+                    </span>
+</div>
+<!-- Password Input -->
+<div class="relative group input-active">
+<label class="absolute -top-2 left-3 bg-[#121212] px-1 font-label-caps text-label-caps text-outline group-focus-within:text-primary transition-colors z-10" for="password">PASSWORD</label>
+<input class="w-full bg-[#1C1C1C] border border-outline-variant rounded-lg px-4 py-4 text-on-surface focus:outline-none focus:ring-0 focus:border-primary transition-colors font-body-md h-[56px]" id="password" name="password" placeholder="••••••••" type="password"/>
+<button aria-label="Toggle password visibility" class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant hover:text-on-surface transition-colors focus:outline-none" onclick="togglePassword()" type="button">
+                        visibility_off
+                    </button>
+</div>
+<!-- Actions -->
+<div class="flex items-center justify-between mt-2">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-[#1C1C1C] text-primary focus:ring-primary focus:ring-offset-[#121212]" type="checkbox"/>
+<span class="font-label-sm text-label-sm text-secondary group-hover:text-on-surface transition-colors">Remember me</span>
+</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-primary-fixed transition-colors underline-offset-4 hover:underline" href="#">Forgot Password?</a>
+</div>
+<!-- Submit Button -->
+<button class="w-full min-h-[48px] bg-[#D4AF37] text-[#000000] font-label-caps text-label-caps uppercase tracking-wider rounded-lg mt-4 hover:bg-primary-fixed active:scale-[0.98] transition-all duration-200 shadow-[0_4px_14px_0_rgba(212,175,55,0.2)] hover:shadow-[0_6px_20px_rgba(212,175,55,0.3)]" type="submit">
+                    Login Securely
+                </button>
+</form>
+</section>
+<!-- Footer Info -->
+<footer class="text-center mt-auto pb-4">
+<p class="font-label-sm text-label-sm text-outline-variant flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+                Internal Access Only
+            </p>
+</footer>
+</main>
+<script>
+        function togglePassword() {
+            const pwdInput = document.getElementById('password');
+            const toggleIcon = event.currentTarget;
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                toggleIcon.textContent = 'visibility';
+            } else {
+                pwdInput.type = 'password';
+                toggleIcon.textContent = 'visibility_off';
+            }
+        }
+    </script>
+</body></html>

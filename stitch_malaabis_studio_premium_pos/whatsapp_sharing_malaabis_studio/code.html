@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Malaabis Studio - Transaction Success</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline-variant": "#4d4635",
+                      "on-surface-variant": "#d0c5af",
+                      "on-secondary-fixed": "#1a1c1c",
+                      "secondary-container": "#454747",
+                      "outline": "#99907c",
+                      "surface-variant": "#353535",
+                      "error": "#ffb4ab",
+                      "tertiary-fixed": "#e5e2e1",
+                      "on-primary-fixed": "#241a00",
+                      "on-primary-container": "#554300",
+                      "on-tertiary-container": "#454545",
+                      "surface-tint": "#e9c349",
+                      "primary-fixed": "#ffe088",
+                      "on-primary-fixed-variant": "#574500",
+                      "primary": "#f2ca50",
+                      "on-secondary-fixed-variant": "#454747",
+                      "inverse-primary": "#735c00",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "surface-container-low": "#1b1b1b",
+                      "surface-container-high": "#2a2a2a",
+                      "surface-bright": "#393939",
+                      "inverse-on-surface": "#303030",
+                      "background": "#131313",
+                      "on-error-container": "#ffdad6",
+                      "primary-fixed-dim": "#e9c349",
+                      "primary-container": "#d4af37",
+                      "secondary-fixed-dim": "#c6c6c7",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "on-secondary": "#2f3131",
+                      "surface-dim": "#131313",
+                      "on-secondary-container": "#b4b5b5",
+                      "error-container": "#93000a",
+                      "surface-container-highest": "#353535",
+                      "surface-container-lowest": "#0e0e0e",
+                      "secondary-fixed": "#e2e2e2",
+                      "tertiary": "#d0cecd",
+                      "secondary": "#c6c6c7",
+                      "surface-container": "#1f1f1f",
+                      "surface": "#131313",
+                      "on-primary": "#3c2f00",
+                      "on-tertiary": "#313030",
+                      "on-error": "#690005",
+                      "tertiary-container": "#b5b2b2",
+                      "on-surface": "#e2e2e2",
+                      "on-background": "#e2e2e2",
+                      "inverse-surface": "#e2e2e2",
+                      "on-tertiary-fixed": "#1c1b1b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "base": "8px",
+                      "section-gap": "40px",
+                      "container-margin": "24px",
+                      "touch-target-min": "48px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Playfair Display"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Playfair Display"
+                      ],
+                      "headline-lg": [
+                              "Playfair Display"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        @keyframes drawCheck {
+            0% { stroke-dashoffset: 100; opacity: 0; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+        }
+        @keyframes scaleIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .success-circle {
+            animation: scaleIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .success-check {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawCheck 0.5s ease-out 0.4s forwards;
+        }
+        
+        /* Hidden Navigation Shells since this is a transactional success screen */
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased md:grid md:grid-cols-12 md:gap-gutter pb-section-gap">
+<!-- Top Navigation (Subtle for transactional page, no links) -->
+<header class="md:col-span-12 flex justify-center items-center py-base px-container-margin w-full bg-background border-b border-primary/10">
+<h1 class="font-headline-md text-headline-md tracking-widest text-primary">MALAABIS STUDIO</h1>
+</header>
+<main class="flex-1 flex flex-col px-container-margin md:col-start-4 md:col-span-6 w-full max-w-[600px] mx-auto mt-section-gap space-y-section-gap">
+<!-- Success Animation & Header -->
+<section class="flex flex-col items-center justify-center text-center space-y-gutter mt-8">
+<div class="relative w-24 h-24 success-circle flex items-center justify-center rounded-full bg-surface-container border border-primary/30 shadow-[0_0_40px_rgba(212,175,55,0.15)]">
+<svg class="w-12 h-12 text-primary" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+<path class="success-check" d="M20 6L9 17l-5-5"></path>
+</svg>
+</div>
+<div class="space-y-base mt-6">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary">Transaction Successful</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Order #MS-9824-A has been confirmed.</p>
+</div>
+</section>
+<!-- Invoice Preview Card -->
+<section class="bg-surface-container rounded-[24px] p-[24px] border border-outline-variant/30 flex flex-col space-y-gutter relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-primary/40"></div>
+<div class="flex justify-between items-end border-b border-surface-variant pb-base">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Order Summary</p>
+<h3 class="font-headline-md text-headline-md text-on-surface mt-1">Invoice Preview</h3>
+</div>
+<span class="material-symbols-outlined text-primary/70" style="font-variation-settings: 'FILL' 0;">receipt_long</span>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Bespoke Velvet Sherwani</span>
+<span class="font-body-md text-body-md text-on-surface">Rs. 145,000</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Silk Pocket Square</span>
+<span class="font-body-md text-body-md text-on-surface">Rs. 4,500</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Alteration Fee</span>
+<span class="font-body-md text-body-md text-on-surface">Complimentary</span>
+</div>
+</div>
+<div class="border-t border-surface-variant pt-gutter flex justify-between items-center mt-2">
+<span class="font-label-sm text-label-sm text-on-surface">Total Paid</span>
+<span class="font-headline-md text-headline-md text-primary">Rs. 149,500</span>
+</div>
+</section>
+<!-- WhatsApp Action Section -->
+<section class="bg-surface-container rounded-[24px] p-[24px] border border-outline-variant/30 flex flex-col space-y-gutter">
+<div>
+<h3 class="font-body-lg text-body-lg text-on-surface mb-1">Send Digital Receipt</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Deliver the invoice directly via WhatsApp.</p>
+</div>
+<div class="flex space-x-base mt-2">
+<div class="relative flex-1 group">
+<input class="w-full bg-surface-bright border-b border-surface-variant text-on-surface font-body-md text-body-md py-3 px-4 rounded-t-lg focus:outline-none focus:border-primary transition-colors focus:ring-0 placeholder-on-surface-variant/50 min-h-[touch-target-min]" id="phone" placeholder="Enter phone number" type="tel"/>
+<label class="sr-only" for="phone">Phone Number</label>
+</div>
+<button class="bg-primary hover:bg-primary-container text-on-primary font-label-caps text-label-caps uppercase flex items-center justify-center px-6 rounded-lg min-h-[touch-target-min] transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background">
+<span class="material-symbols-outlined mr-2" style="font-variation-settings: 'FILL' 1;">send</span>
+                    Send
+                </button>
+</div>
+</section>
+<!-- Bottom Actions -->
+<section class="flex flex-col space-y-base mt-8">
+<button class="w-full border border-primary text-primary hover:bg-primary/5 font-label-caps text-label-caps uppercase rounded-lg py-3 flex items-center justify-center min-h-[touch-target-min] transition-colors">
+<span class="material-symbols-outlined mr-2" style="font-variation-settings: 'FILL' 0;">print</span>
+                Print Invoice
+            </button>
+<button class="w-full text-on-surface hover:text-primary font-label-caps text-label-caps uppercase rounded-lg py-3 flex items-center justify-center min-h-[touch-target-min] transition-colors">
+                Return to Dashboard
+            </button>
+</section>
+</main>
+<script>
+        // Simple script for input interaction
+        document.addEventListener('DOMContentLoaded', () => {
+            const phoneInput = document.getElementById('phone');
+            if(phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    // Simple formatting for visual feedback
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 0) {
+                        if(value.length <= 4) value = value;
+                        else if(value.length <= 7) value = value.slice(0,4) + ' ' + value.slice(4);
+                        else value = value.slice(0,4) + ' ' + value.slice(4,7) + ' ' + value.slice(7,11);
+                    }
+                    e.target.value = value;
+                });
+            }
+        });
+    </script>
+</body></html>
