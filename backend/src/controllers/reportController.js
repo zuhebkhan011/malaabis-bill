@@ -1,7 +1,6 @@
 const Bill = require("../models/Bill");
 const Product = require("../models/Product");
 
-<<<<<<< HEAD
 const getStartOfDayInTz = (date, tz) => {
   try {
     const tzString = date.toLocaleString("en-US", { timeZone: tz });
@@ -31,53 +30,28 @@ const getStartOfMonthInTz = (date, tz) => {
   }
 };
 
-=======
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
 const TIMEFRAME_CONFIG = {
   DAILY: {
     label: "hour",
     unit: "hour",
-<<<<<<< HEAD
     startOfWindow: (timezone) => {
       return getStartOfDayInTz(new Date(), timezone);
-=======
-    startOfWindow: () => {
-      const date = new Date();
-      date.setHours(0, 0, 0, 0);
-      return date;
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
     },
   },
   WEEKLY: {
     label: "day",
     unit: "day",
-<<<<<<< HEAD
     startOfWindow: (timezone) => {
       const startToday = getStartOfDayInTz(new Date(), timezone);
       startToday.setDate(startToday.getDate() - 6);
       return startToday;
-=======
-    startOfWindow: () => {
-      const date = new Date();
-      date.setDate(date.getDate() - 6);
-      date.setHours(0, 0, 0, 0);
-      return date;
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
     },
   },
   MONTHLY: {
     label: "day",
     unit: "day",
-<<<<<<< HEAD
     startOfWindow: (timezone) => {
       return getStartOfMonthInTz(new Date(), timezone);
-=======
-    startOfWindow: () => {
-      const date = new Date();
-      date.setDate(1);
-      date.setHours(0, 0, 0, 0);
-      return date;
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
     },
   },
 };
@@ -96,22 +70,14 @@ const toKeyLabel = (value, unit) => {
   return String(value);
 };
 
-<<<<<<< HEAD
 const buildSeries = (docs, timeframe, timezone) => {
-=======
-const buildSeries = (docs, timeframe) => {
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
   const config = TIMEFRAME_CONFIG[timeframe] || TIMEFRAME_CONFIG.WEEKLY;
   const bucketMap = new Map();
 
   docs.forEach((entry) => {
     const bucketValue = config.unit === "hour"
       ? Number(entry._id)
-<<<<<<< HEAD
       : String(entry._id);
-=======
-      : new Date(entry._id).toISOString().slice(0, 10);
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
 
     const key = String(bucketValue);
     bucketMap.set(key, {
@@ -137,7 +103,6 @@ const buildSeries = (docs, timeframe) => {
     return ordered;
   }
 
-<<<<<<< HEAD
   const start = new Date(TIMEFRAME_CONFIG[timeframe].startOfWindow(timezone));
   const days = [];
   const totalDays = timeframe === "MONTHLY" ? new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate() : 7;
@@ -166,20 +131,6 @@ const buildSeries = (docs, timeframe) => {
     days.push({
       key,
       label: getLocalDateLabel(current, timezone),
-=======
-  const start = new Date(TIMEFRAME_CONFIG[timeframe].startOfWindow());
-  const days = [];
-  const totalDays = timeframe === "MONTHLY" ? new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate() : 7;
-
-  for (let offset = 0; offset < totalDays; offset += 1) {
-    const current = new Date(start);
-    current.setDate(start.getDate() + offset);
-    const key = current.toISOString().slice(0, 10);
-    const point = bucketMap.get(key);
-    days.push({
-      key,
-      label: current.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
       total: point?.total || 0,
       orders: point?.orders || 0,
     });
@@ -192,21 +143,11 @@ const getReportsDashboard = async (req, res) => {
   try {
     const timeframe = String(req.query.timeframe || "WEEKLY").toUpperCase();
     const config = TIMEFRAME_CONFIG[timeframe] || TIMEFRAME_CONFIG.WEEKLY;
-<<<<<<< HEAD
     const timezone = String(req.query.timezone || "UTC");
 
     const now = new Date();
     const startOfToday = getStartOfDayInTz(now, timezone);
     const startOfMonth = getStartOfMonthInTz(now, timezone);
-=======
-    const startOfWindow = config.startOfWindow();
-
-    const now = new Date();
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    startOfMonth.setHours(0, 0, 0, 0);
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
 
     const [todaySalesAgg, monthlySalesAgg, allBillsAgg, topProductsAgg, lowStockProducts, inventoryAgg, paymentAgg, chartAgg] = await Promise.all([
       Bill.aggregate([
@@ -274,23 +215,14 @@ const getReportsDashboard = async (req, res) => {
         { $sort: { totalAmount: -1 } },
       ]),
       Bill.aggregate([
-<<<<<<< HEAD
         { $match: { createdAt: { $gte: config.startOfWindow(timezone) } } },
-=======
-        { $match: { createdAt: { $gte: config.startOfWindow() } } },
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
         {
           $group: {
             _id: {
               $cond: [
                 { $eq: [timeframe, "DAILY"] },
-<<<<<<< HEAD
                 { $hour: { date: "$createdAt", timezone: timezone } },
                 { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: timezone } },
-=======
-                { $hour: "$createdAt" },
-                { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
               ],
             },
             total: { $sum: "$total" },
@@ -318,11 +250,7 @@ const getReportsDashboard = async (req, res) => {
       orders: item.orders || 0,
     }));
     const inventoryValueSummary = inventoryAgg[0] || { inventoryValue: 0, totalProducts: 0, totalStockUnits: 0 };
-<<<<<<< HEAD
     const chartSeries = buildSeries(chartAgg, timeframe, timezone);
-=======
-    const chartSeries = buildSeries(chartAgg, timeframe);
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
 
     res.json({
       timeframe,
