@@ -43,11 +43,7 @@ export default function Dashboard({ setView, products = [], recentBills = [] }) 
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <p className="text-[10px] font-semibold tracking-wider text-outline uppercase mb-2">Total Sales Today</p>
-<<<<<<< HEAD
               <h3 className="text-2xl font-bold text-primary">PKR {todaySales.toLocaleString()}</h3>
-=======
-              <h3 className="text-2xl font-bold text-primary">PKR {totalSales.toLocaleString()}</h3>
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
             </div>
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
               <span className="material-symbols-outlined text-primary text-xl">payments</span>
