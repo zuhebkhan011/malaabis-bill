@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Malaabis Studio - Payment &amp; Checkout</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#4d4635",
+                    "on-surface-variant": "#d0c5af",
+                    "on-secondary-fixed": "#1a1c1c",
+                    "secondary-container": "#454747",
+                    "outline": "#99907c",
+                    "surface-variant": "#353535",
+                    "error": "#ffb4ab",
+                    "tertiary-fixed": "#e5e2e1",
+                    "on-primary-fixed": "#241a00",
+                    "on-primary-container": "#554300",
+                    "on-tertiary-container": "#454545",
+                    "surface-tint": "#e9c349",
+                    "primary-fixed": "#ffe088",
+                    "on-primary-fixed-variant": "#574500",
+                    "primary": "#f2ca50",
+                    "on-secondary-fixed-variant": "#454747",
+                    "inverse-primary": "#735c00",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "surface-container-low": "#1b1b1b",
+                    "surface-container-high": "#2a2a2a",
+                    "surface-bright": "#393939",
+                    "inverse-on-surface": "#303030",
+                    "background": "#131313",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed-dim": "#e9c349",
+                    "primary-container": "#d4af37",
+                    "secondary-fixed-dim": "#c6c6c7",
+                    "on-tertiary-fixed-variant": "#474646",
+                    "on-secondary": "#2f3131",
+                    "surface-dim": "#131313",
+                    "on-secondary-container": "#b4b5b5",
+                    "error-container": "#93000a",
+                    "surface-container-highest": "#353535",
+                    "surface-container-lowest": "#0e0e0e",
+                    "secondary-fixed": "#e2e2e2",
+                    "tertiary": "#d0cecd",
+                    "secondary": "#c6c6c7",
+                    "surface-container": "#1f1f1f",
+                    "surface": "#131313",
+                    "on-primary": "#3c2f00",
+                    "on-tertiary": "#313030",
+                    "on-error": "#690005",
+                    "tertiary-container": "#b5b2b2",
+                    "on-surface": "#e2e2e2",
+                    "on-background": "#e2e2e2",
+                    "inverse-surface": "#e2e2e2",
+                    "on-tertiary-fixed": "#1c1b1b"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "base": "8px",
+                    "section-gap": "40px",
+                    "container-margin": "24px",
+                    "touch-target-min": "48px"
+            },
+            "fontFamily": {
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "label-sm": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Playfair Display"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "label-caps": [
+                            "Inter"
+                    ],
+                    "headline-md": [
+                            "Playfair Display"
+                    ],
+                    "headline-lg": [
+                            "Playfair Display"
+                    ]
+            },
+            "fontSize": {
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-sm": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        [data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Custom Input Styling */
+        .lux-input {
+            background-color: #1C1C1C;
+            border: 1px solid #353535;
+            color: #e2e2e2;
+            transition: border-color 0.3s ease;
+        }
+        .lux-input:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+        
+        /* Custom Checkmark Animation */
+        .checkmark-circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 2;
+            stroke-miterlimit: 10;
+            stroke: #d4af37;
+            fill: none;
+            animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+
+        .checkmark {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 2;
+            stroke: #131313;
+            stroke-miterlimit: 10;
+            margin: 10% auto;
+            box-shadow: inset 0px 0px 0px #d4af37;
+            animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+        }
+
+        .checkmark-check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+
+        @keyframes stroke {
+            100% { stroke-dashoffset: 0; }
+        }
+
+        @keyframes scale {
+            0%, 100% { transform: none; }
+            50% { transform: scale3d(1.1, 1.1, 1); }
+        }
+
+        @keyframes fill {
+            100% { box-shadow: inset 0px 0px 0px 50px #d4af37; }
+        }
+        
+        /* Hide scrollbar for clean UI */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col font-body-md antialiased selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar (Transactional Screen - Suppressing Nav Icons) -->
+<header class="bg-background border-b border-primary/30 flex justify-between items-center px-container-margin py-base w-full sticky top-0 z-50">
+<div class="flex items-center space-x-4">
+<button class="text-primary hover:opacity-80 transition-opacity" onclick="window.history.back()">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<h1 class="font-headline-md text-headline-md tracking-widest text-primary uppercase text-center flex-grow">Checkout</h1>
+<div class="w-6"></div> <!-- Spacer for centering -->
+</header>
+<main class="flex-grow flex flex-col md:flex-row p-container-margin gap-8 max-w-7xl mx-auto w-full">
+<!-- Left Column: Order Summary -->
+<section class="w-full md:w-5/12 flex flex-col gap-6 order-2 md:order-1">
+<div class="bg-[#121212] rounded-2xl p-6 border border-outline-variant/30 relative overflow-hidden">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6">Order Summary</h2>
+<div class="flex flex-col gap-4 mb-6">
+<div class="flex justify-between items-center pb-4 border-b border-[#1C1C1C]">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 bg-[#1C1C1C] rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Silk Evening Gown" class="w-full h-full object-cover" data-alt="Close up photography of a luxurious emerald green silk evening gown on a mannequin in a dimly lit, high-end boutique setting. The lighting highlights the sheen of the fabric. The overall mood is elegant, exclusive, and dramatic, fitting a luxury fashion brand identity with deep black background and subtle warm accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJlPMRFJdGvy3bnN_w6ktNCC6M5tF0IZBvqHPIC3GgmwMH0fUwoQG44OPfpA_eHoAynyuSsyups9R2pXwaHe7uKcWwdJ5cYUndbModovYHY3sZQ2e_qTZY9hpMMDRmsOdqxMIp46w4X0f2gMR6RWXUlNrtjq30CBtBOAWrrP92R9Fsu9EWgvdp_72hgd5tIzCE45YvFuXHb7znWVAvAJhpbcxsXu9tEbfC7JQpXRy9Jn05JRLN7WAj45RchbK-C2OyH_1o_V39yZDL"/>
+</div>
+<div>
+<h3 class="font-body-md text-body-md text-on-surface">Emerald Silk Gown</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Size: M | Qty: 1</p>
+</div>
+</div>
+<span class="font-body-md text-body-md text-primary">PKR 85,000</span>
+</div>
+<div class="flex justify-between items-center pb-4 border-b border-[#1C1C1C]">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 bg-[#1C1C1C] rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Gold Stilettos" class="w-full h-full object-cover" data-alt="High quality studio shot of a pair of gold metallic stiletto heels placed on a sleek black reflective surface. Dramatic spotlighting emphasizes the shine and texture of the shoes. The image is composed with deep shadows and high contrast, evoking a sense of modern luxury and premium craftsmanship." src="https://lh3.googleusercontent.com/aida-public/AB6AXuACSINYNLvlakyi1vYqAThkHbDx32STlZ_gFBQpNhbuRHDmrpXfSa0T3e914I_LleF5Ip38nuQ8F69zGw8qgzKl45nAQT1mfLrs4dQCpmhufh6Fcx-4vI75mCs7iuw4z1xlAB0uWg0htyuZsJiq95gzl6PMB609bNoqqU7AEVvRE-cKwtVMz9tvgLRLmOBQ4HeKr6Tf1XYZAsxl1412DIJP06re-hveYM0OyD3_3VSS_ziaAufUEbxFNNOvWI0Hyqp0go_SDCoD3KMY"/>
+</div>
+<div>
+<h3 class="font-body-md text-body-md text-on-surface">Aura Stilettos</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Size: 38 | Qty: 1</p>
+</div>
+</div>
+<span class="font-body-md text-body-md text-primary">PKR 22,000</span>
+</div>
+</div>
+<div class="space-y-2 mb-6">
+<div class="flex justify-between font-body-md text-on-surface-variant">
+<span>Subtotal</span>
+<span>PKR 107,000</span>
+</div>
+<div class="flex justify-between font-body-md text-on-surface-variant">
+<span>Tax (5%)</span>
+<span>PKR 5,350</span>
+</div>
+<div class="flex justify-between font-body-md text-on-surface-variant">
+<span>Discount</span>
+<span>- PKR 0</span>
+</div>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-primary/30">
+<span class="font-headline-md text-headline-md text-on-surface">Total</span>
+<span class="font-headline-md text-headline-md text-primary">PKR 112,350</span>
+</div>
+</div>
+<button class="w-full h-touch-target-min border border-outline-variant rounded-lg text-on-surface font-label-caps text-label-caps uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#1C1C1C] transition-colors">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+                Attach Customer Profile
+            </button>
+</section>
+<!-- Right Column: Payment Details -->
+<section class="w-full md:w-7/12 flex flex-col gap-6 order-1 md:order-2">
+<h2 class="font-headline-md text-headline-md text-on-surface">Payment Method</h2>
+<!-- Payment Method Selector -->
+<div class="grid grid-cols-3 gap-4">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="payment_method" onchange="togglePaymentSections('card')" type="radio" value="card"/>
+<div class="bg-[#121212] border border-outline-variant/50 rounded-xl p-4 flex flex-col items-center justify-center gap-2 peer-checked:border-primary peer-checked:bg-[#1C1C1C] transition-all h-24">
+<span class="material-symbols-outlined text-on-surface-variant peer-checked:text-primary transition-colors" data-icon="credit_card">credit_card</span>
+<span class="font-label-caps text-label-caps text-on-surface peer-checked:text-primary transition-colors">Card</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="payment_method" onchange="togglePaymentSections('cash')" type="radio" value="cash"/>
+<div class="bg-[#121212] border border-outline-variant/50 rounded-xl p-4 flex flex-col items-center justify-center gap-2 peer-checked:border-primary peer-checked:bg-[#1C1C1C] transition-all h-24">
+<span class="material-symbols-outlined text-on-surface-variant peer-checked:text-primary transition-colors" data-icon="payments">payments</span>
+<span class="font-label-caps text-label-caps text-on-surface peer-checked:text-primary transition-colors">Cash</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="payment_method" onchange="togglePaymentSections('upi')" type="radio" value="upi"/>
+<div class="bg-[#121212] border border-outline-variant/50 rounded-xl p-4 flex flex-col items-center justify-center gap-2 peer-checked:border-primary peer-checked:bg-[#1C1C1C] transition-all h-24">
+<span class="material-symbols-outlined text-on-surface-variant peer-checked:text-primary transition-colors" data-icon="qr_code_scanner">qr_code_scanner</span>
+<span class="font-label-caps text-label-caps text-on-surface peer-checked:text-primary transition-colors">UPI</span>
+</div>
+</label>
+</div>
+<!-- Card Section -->
+<div class="bg-[#121212] rounded-2xl p-6 border border-outline-variant/30 flex flex-col items-center justify-center min-h-[300px]" id="section-card">
+<span class="material-symbols-outlined text-6xl text-outline-variant mb-4" data-icon="point_of_sale">point_of_sale</span>
+<p class="font-body-md text-body-md text-on-surface-variant text-center max-w-sm">Please insert, swipe, or tap the card on the payment terminal to complete the transaction.</p>
+<div class="mt-8 flex gap-4">
+<div class="w-12 h-8 bg-surface-variant rounded flex items-center justify-center"><span class="text-xs font-bold text-on-surface">VISA</span></div>
+<div class="w-12 h-8 bg-surface-variant rounded flex items-center justify-center"><span class="text-xs font-bold text-on-surface">MC</span></div>
+</div>
+</div>
+<!-- Cash Section -->
+<div class="bg-[#121212] rounded-2xl p-6 border border-outline-variant/30 hidden flex-col gap-6 min-h-[300px]" id="section-cash">
+<div class="relative">
+<label class="font-label-caps text-label-caps text-on-surface-variant absolute -top-2 left-3 bg-[#121212] px-1">Amount Received (PKR)</label>
+<input class="lux-input w-full rounded-lg px-4 py-4 font-headline-md text-headline-md text-right" id="cash-received" oninput="calculateChange()" placeholder="0" type="number"/>
+</div>
+<div class="grid grid-cols-4 gap-2">
+<button class="bg-[#1C1C1C] hover:bg-surface-variant text-on-surface py-2 rounded font-body-md transition-colors" onclick="setCash(112350)">Exact</button>
+<button class="bg-[#1C1C1C] hover:bg-surface-variant text-on-surface py-2 rounded font-body-md transition-colors" onclick="setCash(115000)">115,000</button>
+<button class="bg-[#1C1C1C] hover:bg-surface-variant text-on-surface py-2 rounded font-body-md transition-colors" onclick="setCash(120000)">120,000</button>
+<button class="bg-[#1C1C1C] hover:bg-surface-variant text-on-surface py-2 rounded font-body-md transition-colors" onclick="setCash(150000)">150,000</button>
+</div>
+<div class="mt-auto border-t border-[#1C1C1C] pt-6 flex justify-between items-center">
+<span class="font-headline-md text-headline-md text-on-surface">Change Due</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary" id="change-due">PKR 0</span>
+</div>
+</div>
+<!-- UPI Section -->
+<div class="bg-[#121212] rounded-2xl p-8 border border-outline-variant/30 hidden flex-col items-center justify-center min-h-[300px] relative overflow-hidden" id="section-upi">
+<!-- Decorative background elements -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-tr-full pointer-events-none"></div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 tracking-wide">Scan &amp; Pay</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-6">Total: PKR 112,350</p>
+<div class="bg-white p-4 rounded-xl shadow-[0_0_30px_rgba(212,175,55,0.15)] border-2 border-primary/20">
+<!-- Placeholder for actual QR code image -->
+<img alt="Payment QR Code" class="w-48 h-48 rounded" data-alt="A clean, high-contrast black and white QR code displayed prominently inside a bright white square container. The surrounding interface is dark luxury mode. The QR code is sharp and perfectly legible, intended for scanning on a mobile device screen." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP2EhoH9dZJNK4T_mda_sZu_p9bU9ajng5sAY5OoxjTfAqfpwxtJJ6DdXFnRu2Y7tbgzPqo27sksPem7BrZighv_F6MDeCyITplIFHUswoaS-o7KSzf9JuAsIi_4hh0R4rcniiCIAYL_lIcgIuhEWEs06VUj6IIJYIoFaQw3HAVO1-wd_nky75JYjpe4NRyqOwGeJ25nr8VZxXnRAaqpGdNFFu0_2KHMUzjX56nWBBE7Mqe5C_rV8EIejPQ8pfkWyTTtlbVHrpQLsX"/>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm animate-pulse" data-icon="sync">sync</span>
+                    Awaiting payment confirmation...
+                </p>
+</div>
+<!-- Action Area -->
+<div class="mt-auto pt-6 flex gap-4">
+<button class="w-1/3 h-touch-target-min border border-outline-variant rounded-lg text-on-surface font-label-caps text-label-caps uppercase tracking-widest hover:bg-[#1C1C1C] transition-colors" onclick="window.history.back()">
+                    Cancel
+                </button>
+<button class="w-2/3 h-touch-target-min bg-primary text-black rounded-lg font-label-caps text-label-caps uppercase tracking-widest font-bold hover:opacity-90 transition-opacity" id="btn-complete" onclick="processPayment()">
+                    Complete Payment
+                </button>
+</div>
+</section>
+</main>
+<!-- Success Overlay -->
+<div class="fixed inset-0 bg-background/95 z-[100] hidden flex-col items-center justify-center p-container-margin backdrop-blur-sm" id="success-overlay">
+<svg class="checkmark" viewbox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+<circle class="checkmark-circle" cx="26" cy="26" fill="none" r="25"></circle>
+<path class="checkmark-check" d="M14.1 27.2l7.1 7.2 16.7-16.8" fill="none"></path>
+</svg>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mt-8 mb-2 opacity-0 translate-y-4 transition-all duration-500" id="success-text-1">Payment Successful</h2>
+<p class="font-body-md text-body-md text-on-surface-variant opacity-0 translate-y-4 transition-all duration-500 delay-100" id="success-text-2">Transaction ID: MS-8923-441</p>
+<div class="mt-12 flex flex-col gap-4 w-full max-w-sm opacity-0 translate-y-4 transition-all duration-500 delay-200" id="success-actions">
+<button class="w-full h-touch-target-min border border-primary rounded-lg text-primary font-label-caps text-label-caps uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined" data-icon="receipt">receipt</span>
+                Print Receipt
+            </button>
+<button class="w-full h-touch-target-min bg-primary text-black rounded-lg font-label-caps text-label-caps uppercase tracking-widest font-bold hover:opacity-90 transition-opacity" onclick="window.location.reload()">
+                New Sale
+            </button>
+</div>
+</div>
+<script>
+        const totalAmount = 112350;
+
+        function togglePaymentSections(method) {
+            document.getElementById('section-card').style.display = method === 'card' ? 'flex' : 'none';
+            document.getElementById('section-cash').style.display = method === 'cash' ? 'flex' : 'none';
+            document.getElementById('section-upi').style.display = method === 'upi' ? 'flex' : 'none';
+            
+            const btnComplete = document.getElementById('btn-complete');
+            if(method === 'upi') {
+                btnComplete.style.display = 'none'; // Awaits auto-confirmation
+            } else {
+                btnComplete.style.display = 'block';
+            }
+        }
+
+        function setCash(amount) {
+            document.getElementById('cash-received').value = amount;
+            calculateChange();
+        }
+
+        function calculateChange() {
+            const received = parseFloat(document.getElementById('cash-received').value) || 0;
+            let change = received - totalAmount;
+            if(change < 0) change = 0;
+            
+            // Format number with commas
+            const formattedChange = change.toLocaleString('en-US');
+            document.getElementById('change-due').innerText = `PKR ${formattedChange}`;
+        }
+
+        function processPayment() {
+            // Simulate processing
+            const btn = document.getElementById('btn-complete');
+            const originalText = btn.innerText;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin" data-icon="progress_activity">progress_activity</span>';
+            
+            setTimeout(() => {
+                showSuccess();
+            }, 1500);
+        }
+
+        function showSuccess() {
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'flex';
+            
+            // Trigger text animations after checkmark starts
+            setTimeout(() => {
+                document.getElementById('success-text-1').classList.remove('opacity-0', 'translate-y-4');
+                document.getElementById('success-text-2').classList.remove('opacity-0', 'translate-y-4');
+                document.getElementById('success-actions').classList.remove('opacity-0', 'translate-y-4');
+            }, 800);
+        }
+    </script>
+</body></html>
