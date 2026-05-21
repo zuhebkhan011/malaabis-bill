@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 export default function Dashboard({ setView, products = [], recentBills = [] }) {
+<<<<<<< HEAD
   // Calculate stats dynamically
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -9,6 +10,11 @@ export default function Dashboard({ setView, products = [], recentBills = [] }) 
     .filter((bill) => new Date(bill.createdAt || Date.now()) >= today)
     .reduce((acc, bill) => acc + (bill.total || 0), 0);
 
+=======
+  const [totalSales, setTotalSales] = useState(145000); // Standard starting mock value
+  
+  // Calculate stats dynamically from passed products
+>>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
   const totalProductsCount = products.length;
   const lowStockItems = products.filter(p => p.stock <= 5);
   const lowStockCount = lowStockItems.length;
@@ -37,7 +43,11 @@ export default function Dashboard({ setView, products = [], recentBills = [] }) 
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <p className="text-[10px] font-semibold tracking-wider text-outline uppercase mb-2">Total Sales Today</p>
+<<<<<<< HEAD
               <h3 className="text-2xl font-bold text-primary">PKR {todaySales.toLocaleString()}</h3>
+=======
+              <h3 className="text-2xl font-bold text-primary">PKR {totalSales.toLocaleString()}</h3>
+>>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
             </div>
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
               <span className="material-symbols-outlined text-primary text-xl">payments</span>
