@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 
 export default function Dashboard({ setView, products = [], recentBills = [] }) {
-<<<<<<< HEAD
-  // Calculate stats dynamically
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -10,11 +8,6 @@ export default function Dashboard({ setView, products = [], recentBills = [] }) 
     .filter((bill) => new Date(bill.createdAt || Date.now()) >= today)
     .reduce((acc, bill) => acc + (bill.total || 0), 0);
 
-=======
-  const [totalSales, setTotalSales] = useState(145000); // Standard starting mock value
-  
-  // Calculate stats dynamically from passed products
->>>>>>> 8f307e9dc34d0fb8cabee8a6a53f983ecf55b3a9
   const totalProductsCount = products.length;
   const lowStockItems = products.filter(p => p.stock <= 5);
   const lowStockCount = lowStockItems.length;
