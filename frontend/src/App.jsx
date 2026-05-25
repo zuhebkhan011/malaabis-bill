@@ -65,9 +65,27 @@ function App() {
   const fetchBills = async () => {
     try {
       const data = await getBills();
-      setRecentBills(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      setRecentBills(list);
+      // Synchronize cloud-synced invoices to savedInvoices state when online
+      setSavedInvoices(list);
+
+      // Cache all fetched cloud invoices locally for offline safety
+      try {
+        for (const bill of list) {
+          await offline.saveInvoiceLocally(bill);
+        }
+      } catch (cacheErr) {
+        console.warn("Failed to locally cache cloud invoices:", cacheErr);
+      }
     } catch (error) {
-      console.error("Bills API error:", error);
+      console.error("Bills API error, falling back to local storage:", error);
+      try {
+        const localInvoices = await offline.loadSavedInvoices();
+        setSavedInvoices(localInvoices || []);
+      } catch (localErr) {
+        console.warn("Failed to load offline fallback invoices:", localErr);
+      }
     }
   };
 
@@ -180,6 +198,25 @@ function App() {
           ]);
         } catch (err) {
           console.warn("Socket event failed to cache invoice locally:", err);
+        }
+      }
+    });
+
+    socket.on("invoice-updated", async (updatedInvoice) => {
+      if (updatedInvoice && updatedInvoice._id) {
+        console.log(`Live sync: invoice updated #${updatedInvoice.invoiceNumber}`);
+        setRecentBills((cur) =>
+          cur.map((b) => (b._id === updatedInvoice._id ? { ...b, ...updatedInvoice } : b))
+        );
+        setSavedInvoices((prev) =>
+          prev.map((b) => (b._id === updatedInvoice._id ? { ...b, ...updatedInvoice } : b))
+        );
+
+        // Update locally in IndexedDB for offline parity
+        try {
+          await offline.saveInvoiceLocally(updatedInvoice);
+        } catch (err) {
+          console.warn("Socket update failed to cache locally:", err);
         }
       }
     });

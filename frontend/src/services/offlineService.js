@@ -87,7 +87,21 @@ async function syncOnce(onProgress) {
     try {
       onProgress?.({ id: entry.id, status: "syncing", entry });
       if (entry.type === "bill") {
-        await fetch(`${API_BASE_URL}/bills/checkout`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry.payload) });
+        const response = await fetch(`${API_BASE_URL}/bills/checkout`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry.payload) });
+        if (response.ok) {
+          const savedBill = await response.json().catch(() => null);
+          if (savedBill && savedBill._id) {
+            try {
+              const { InvoicePDFService } = await import("./InvoicePDFService");
+              const { uploadBillPDF } = await import("./billingApi");
+              const pdfBase64 = await InvoicePDFService.generatePDFBase64(savedBill);
+              await uploadBillPDF(savedBill._id, pdfBase64);
+              console.log(`Auto PDF uploaded successfully for synced invoice #${savedBill.invoiceNumber}`);
+            } catch (pdfErr) {
+              console.warn("Auto PDF generation/upload failed for synced bill:", pdfErr);
+            }
+          }
+        }
       } else if (entry.type === "product_update") {
         const p = entry.payload;
         await fetch(`${API_BASE_URL}/products/${p._id || p.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });

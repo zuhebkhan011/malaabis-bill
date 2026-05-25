@@ -247,6 +247,22 @@ export default function NewBill({ products = [], onCheckout }) {
       setSavedInvoice(savedBill);
       setIsInvoicePreviewOpen(true);
 
+      // Auto A4 PDF generation & cloud MongoDB save trigger
+      if (savedBill && savedBill._id && !savedBill.offline) {
+        setTimeout(async () => {
+          try {
+            console.log("Starting background PDF auto-compilation...");
+            const { InvoicePDFService } = await import("../services/InvoicePDFService");
+            const { uploadBillPDF } = await import("../services/billingApi");
+            const pdfBase64 = await InvoicePDFService.generatePDFBase64(savedBill);
+            await uploadBillPDF(savedBill._id, pdfBase64);
+            console.log("A4 PDF generated & saved in MongoDB successfully!");
+          } catch (err) {
+            console.warn("Background auto PDF generation/upload failed:", err);
+          }
+        }, 1000);
+      }
+
       setCart([]);
       setCustomerName("");
       setCustomerMobile("");

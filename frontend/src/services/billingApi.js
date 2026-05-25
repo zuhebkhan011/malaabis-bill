@@ -28,3 +28,10 @@ export async function createBill(billData) {
 export async function getBills() {
   return requestJson("/bills");
 }
+
+export async function uploadBillPDF(id, pdfData) {
+  return requestJson(`/bills/${id}/pdf`, {
+    method: "PUT",
+    body: JSON.stringify({ pdfData }),
+  });
+}

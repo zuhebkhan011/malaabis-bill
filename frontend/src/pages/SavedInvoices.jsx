@@ -10,6 +10,10 @@ export default function SavedInvoices({ invoices = [], onDelete, onBack }) {
   const [downloadingId, setDownloadingId] = useState(null);
   const [pdfActiveInvoice, setPdfActiveInvoice] = useState(null);
 
+  // Search & Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+
   const handlePreview = (invoice) => {
     setPreviewInvoice(invoice);
     setIsPreviewOpen(true);
@@ -19,7 +23,7 @@ export default function SavedInvoices({ invoices = [], onDelete, onBack }) {
     setDownloadingId(invoice._id);
     setPdfActiveInvoice(invoice);
     
-    // Allow a small delay for React to render the InvoiceTemplate in the DOM
+    // Allow a small delay for React to render the InvoiceTemplate in the DOM if locally compiling
     setTimeout(async () => {
       try {
         await InvoicePDFService.generateAndSave(invoice);
@@ -57,42 +61,109 @@ export default function SavedInvoices({ invoices = [], onDelete, onBack }) {
 
   const printInvoice = () => window.print();
 
+  // Filter Logic
+  const filteredInvoices = invoices.filter((invoice) => {
+    // 1. Query Check
+    const query = searchQuery.trim().toLowerCase();
+    const matchesQuery = query
+      ? (
+          (invoice.customerName || "walk-in customer").toLowerCase().includes(query) ||
+          (invoice.customerMobile || "").includes(query) ||
+          (invoice.invoiceNumber || "").toLowerCase().includes(query) ||
+          (invoice._id || "").toLowerCase().includes(query)
+        )
+      : true;
+
+    // 2. Date Check
+    let matchesDate = true;
+    if (filterDate) {
+      const invoiceDateStr = new Date(invoice.createdAt || invoice.savedAt || Date.now())
+        .toISOString()
+        .slice(0, 10);
+      matchesDate = invoiceDateStr === filterDate;
+    }
+
+    return matchesQuery && matchesDate;
+  });
+
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
           onClick={onBack}
-          className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-secondary hover:text-on-surface transition-colors cursor-pointer border border-[#4d4635]/20"
+          className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-secondary hover:text-on-surface transition-colors cursor-pointer border border-[#4d4635]/25"
         >
           <span className="material-symbols-outlined text-lg">arrow_back</span>
         </button>
         <div>
-          <h2 className="font-headline text-3xl text-on-surface">Saved Invoices</h2>
-          <p className="text-secondary text-sm mt-0.5">All invoices stored on this device</p>
+          <h2 className="font-headline text-3xl text-on-surface">Invoice History</h2>
+          <p className="text-secondary text-sm mt-0.5">Shared cloud invoices & history synced live</p>
         </div>
+      </div>
+
+      {/* Search and Filters Section */}
+      <div className="bg-[#121212] p-5 rounded-2xl border border-[#4d4635]/15 flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+        {/* Search Input */}
+        <div className="flex-1 relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xl">search</span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by customer name, phone, or invoice #..."
+            className="w-full h-11 bg-[#1a1a1a] border border-[#4d4635]/20 focus:border-primary/50 focus:outline-none rounded-xl pl-10 pr-4 text-sm text-on-surface placeholder:text-outline transition-all"
+          />
+        </div>
+
+        {/* Date Filter */}
+        <div className="w-full md:w-56 relative flex items-center bg-[#1a1a1a] border border-[#4d4635]/20 rounded-xl px-3 h-11">
+          <span className="material-symbols-outlined text-outline text-lg mr-2">calendar_month</span>
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="bg-transparent border-none text-xs text-on-surface focus:outline-none w-full uppercase tracking-wider font-semibold"
+            style={{ colorScheme: "dark" }}
+          />
+        </div>
+
+        {/* Clear Filters */}
+        {(searchQuery || filterDate) && (
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setFilterDate("");
+            }}
+            className="h-11 px-4 rounded-xl bg-error/10 border border-error/20 text-error hover:bg-error/20 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-sm">clear_all</span>
+            Reset
+          </button>
+        )}
       </div>
 
       {/* Info Banner */}
       <div className="rounded-2xl border border-primary/20 bg-primary/8 p-4 flex items-start gap-3">
-        <span className="material-symbols-outlined text-primary text-xl shrink-0 mt-0.5">info</span>
+        <span className="material-symbols-outlined text-primary text-xl shrink-0 mt-0.5">cloud_done</span>
         <p className="text-sm text-secondary">
-          Invoices are automatically saved to your device after every sale — available even when offline.
+          Invoices are synchronized in real-time across all devices via Socket.IO. You can instantly view, print, or download A4 PDFs.
         </p>
       </div>
 
-      {/* Empty state */}
-      {invoices.length === 0 ? (
+      {/* Invoices List Display */}
+      {filteredInvoices.length === 0 ? (
         <div className="text-center py-24 text-secondary border border-dashed border-[#4d4635]/20 rounded-2xl bg-[#121212]">
           <span className="material-symbols-outlined text-5xl text-outline mb-3 block">receipt_long</span>
-          <p className="text-base font-semibold text-on-surface">No saved invoices yet</p>
-          <p className="text-sm mt-1">Create a bill and it will appear here automatically.</p>
+          <p className="text-base font-semibold text-on-surface">No invoices found</p>
+          <p className="text-sm mt-1">Try resetting your search query or checkouts.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {invoices.map((invoice) => {
+          {filteredInvoices.map((invoice) => {
             const date = new Date(invoice.createdAt || invoice.savedAt || Date.now());
             const isOffline = !!invoice.offline;
+            const hasCloudPDF = !!invoice.pdfData;
 
             return (
               <div
@@ -108,7 +179,12 @@ export default function SavedInvoices({ invoices = [], onDelete, onBack }) {
                       </span>
                       {isOffline && (
                         <span className="text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                          Offline
+                          Offline Queue
+                        </span>
+                      )}
+                      {hasCloudPDF && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full" title="Identical cloud A4 PDF generated">
+                          Cloud PDF Saved
                         </span>
                       )}
                     </div>
@@ -147,7 +223,7 @@ export default function SavedInvoices({ invoices = [], onDelete, onBack }) {
                     className="flex-1 min-w-[80px] h-9 rounded-xl border border-white/10 bg-white/5 text-on-surface hover:bg-white/10 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
                     <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
-                    {downloadingId === invoice._id ? "..." : "PDF"}
+                    {downloadingId === invoice._id ? "..." : (hasCloudPDF ? "Download" : "PDF")}
                   </button>
                   <button
                     onClick={() => handleWhatsApp(invoice)}

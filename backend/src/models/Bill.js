@@ -96,6 +96,10 @@ const billSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    pdfData: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

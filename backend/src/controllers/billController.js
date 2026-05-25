@@ -121,7 +121,37 @@ const getBills = async (_req, res) => {
   }
 };
 
+const updateBillPDF = async (req, res) => {
+  try {
+    const { pdfData } = req.body;
+    if (!pdfData) {
+      return res.status(400).json({ message: "pdfData is required" });
+    }
+
+    const bill = await Bill.findByIdAndUpdate(
+      req.params.id,
+      { pdfData },
+      { new: true }
+    );
+
+    if (!bill) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+
+    // Broadcast invoice-updated to all devices so they can grab the shared PDF
+    if (req.io) {
+      req.io.emit("invoice-updated", bill);
+      req.io.emit("reports-updated", { type: "bill", action: "pdf_upload" });
+    }
+
+    res.json(bill);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createBill,
   getBills,
+  updateBillPDF,
 };
