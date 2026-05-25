@@ -36,6 +36,7 @@ function BottomNavItem({ active, icon, label, onClick }) {
 }
 
 import SyncIndicator from "../SyncIndicator";
+import { resetDatabase } from "../../services/productApi";
 
 export default function AppShell({
   user,
@@ -47,6 +48,32 @@ export default function AppShell({
   syncStatus,
   socketStatus,
 }) {
+  const handleSystemReset = async () => {
+    const confirmed = window.confirm(
+      "⚠️ WARNING: SYSTEM DATABASE RESET\n\nThis will completely purge all active products, invoices, and sales history from BOTH the remote MongoDB Atlas server and this local device.\n\nThis action is permanent and cannot be undone.\n\nAre you sure you want to completely reset the system?"
+    );
+    if (!confirmed) return;
+
+    const secondConfirm = window.confirm(
+      "❓ FINAL CONFIRMATION\n\nAre you absolutely sure you want to proceed? The database will start completely empty for fresh production use."
+    );
+    if (!secondConfirm) return;
+
+    try {
+      await resetDatabase();
+      localStorage.clear();
+      const req = indexedDB.deleteDatabase("malaabis_offline_v1");
+      const onDone = () => {
+        alert("🎉 System reset successfully! Redirecting to login for a fresh start.");
+        window.location.reload();
+      };
+      req.onsuccess = onDone;
+      req.onerror = onDone;
+    } catch (err) {
+      alert("❌ Error resetting database: " + err.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#131313] text-[#e2e2e2] font-body flex overflow-hidden">
       {/* Desktop Sidebar */}
@@ -108,8 +135,16 @@ export default function AppShell({
         </nav>
 
         <button
+          onClick={handleSystemReset}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-error/80 hover:bg-error/10 hover:text-error transition-all duration-200 mt-auto cursor-pointer min-h-[48px]"
+        >
+          <span className="material-symbols-outlined text-xl">restart_alt</span>
+          <span className="text-xs uppercase font-semibold tracking-wider">System Reset</span>
+        </button>
+
+        <button
           onClick={onLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-error hover:bg-error/10 hover:text-error transition-all duration-200 mt-auto cursor-pointer min-h-[48px]"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-error hover:bg-error/10 hover:text-error transition-all duration-200 cursor-pointer min-h-[48px]"
         >
           <span className="material-symbols-outlined text-xl">logout</span>
           <span className="text-xs uppercase font-semibold tracking-wider">Logout</span>
@@ -155,6 +190,13 @@ export default function AppShell({
             <span className="text-xs text-primary font-bold truncate max-w-[80px]">
               {user?.username}
             </span>
+            <button
+              onClick={handleSystemReset}
+              className="text-error/80 hover:text-error min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
+              title="System Reset"
+            >
+              <span className="material-symbols-outlined text-xl">restart_alt</span>
+            </button>
             <button
               onClick={onLogout}
               className="text-error hover:text-error-container min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"

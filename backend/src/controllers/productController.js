@@ -72,11 +72,34 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+const systemResetDatabase = async (req, res) => {
+  try {
+    const Product = require("../models/Product");
+    const Bill = require("../models/Bill");
+
+    console.log("⚠️ Database system reset triggered via API.");
+    await Product.deleteMany({});
+    await Bill.deleteMany({});
+    console.log("✅ Dropped products and bills successfully from MongoDB.");
+
+    if (req.io) {
+      req.io.emit("database-reset");
+      console.log("📡 Emitted database-reset socket event to all active clients.");
+    }
+
+    res.json({ message: "Database reset completely and successfully!" });
+  } catch (error) {
+    console.error("❌ Database reset API error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getProducts,
   createProduct,
   updateProduct,
   deleteProduct,
+  systemResetDatabase,
 };
 
 

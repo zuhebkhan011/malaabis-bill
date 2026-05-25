@@ -45,4 +45,10 @@ export async function removeProduct(id) {
   });
 }
 
+export async function resetDatabase() {
+  return requestJson("/products/system-reset-database", {
+    method: "POST",
+  });
+}
+
 export { API_BASE_URL };

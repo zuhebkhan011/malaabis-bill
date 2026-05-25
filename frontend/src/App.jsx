@@ -227,6 +227,20 @@ function App() {
       fetchBills();
     });
 
+    socket.on("database-reset", () => {
+      console.log("Database reset broadcast received! Cleaning local caches...");
+      localStorage.clear();
+      const req = indexedDB.deleteDatabase("malaabis_offline_v1");
+      req.onsuccess = () => {
+        alert("⚠️ The database has been reset for production by the administrator. Logging out for a clean start!");
+        window.location.reload();
+      };
+      req.onerror = () => {
+        localStorage.clear();
+        window.location.reload();
+      };
+    });
+
     return () => {
       socket.disconnect();
     };

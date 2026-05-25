@@ -25,13 +25,10 @@ async function reset() {
     await db.collection("bills").deleteMany({});
     console.log("✅ Dropped all old invoices successfully! (Sales dashboard is now reset)");
 
-    // 2. DELETE ALL PRODUCTS (Optional)
-    // Uncomment the lines below ONLY if you also want to delete all products/inventory:
-    /*
+    // 2. DELETE ALL PRODUCTS
     console.log("\n🧹 Deleting all products from inventory...");
     await db.collection("products").deleteMany({});
     console.log("✅ Dropped all products successfully!");
-    */
 
     console.log("\n🎉 Database reset process complete! Your app is ready for a clean start.");
   } catch (err) {
