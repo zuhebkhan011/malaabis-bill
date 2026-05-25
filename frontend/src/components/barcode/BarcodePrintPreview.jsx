@@ -1,5 +1,6 @@
 import React from "react";
 import BarcodeGenerator from "../BarcodeGenerator";
+import { formatINR } from "../../utils/currency";
 
 export default function BarcodePrintPreview({ product, onClose }) {
   if (!product) {
@@ -13,7 +14,7 @@ export default function BarcodePrintPreview({ product, onClose }) {
   return (
     <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
-      <div className="barcode-print-area relative z-10 w-full max-w-md rounded-[28px] bg-[#121212] border border-[#4d4635]/30 shadow-2xl overflow-hidden">
+      <div className="relative z-10 w-full max-w-md rounded-[28px] bg-[#121212] border border-[#4d4635]/30 shadow-2xl overflow-hidden">
         <div className="p-6 border-b border-white/10 flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-[0.28em] text-secondary">Printable barcode preview</p>
@@ -30,11 +31,11 @@ export default function BarcodePrintPreview({ product, onClose }) {
           </button>
         </div>
 
-        <div className="p-6 bg-white barcode-preview-sheet text-black">
+        <div className="barcode-print-area p-6 bg-white barcode-preview-sheet text-black">
           <div className="space-y-1 mb-5">
             <p className="text-[10px] uppercase tracking-[0.28em] text-[#353535]">Malaabis Studio</p>
             <h4 className="text-xl font-semibold leading-tight">{product.name}</h4>
-            <p className="text-sm text-[#353535]">PKR {Number(product.price || 0).toLocaleString()} • {product.category || "UNSTITCHED"}</p>
+            <p className="text-sm text-[#353535]">{formatINR(product.price)} • {product.category || "UNSTITCHED"}</p>
           </div>
           <BarcodeGenerator value={product.sku || "MALAABIS"} height={72} widthScale={2} />
           <div className="mt-4 flex items-center justify-between text-[10px] uppercase tracking-[0.22em] text-[#353535]">

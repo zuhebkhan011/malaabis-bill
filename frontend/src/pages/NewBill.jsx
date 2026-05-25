@@ -4,6 +4,9 @@ import { queueBill } from "../services/offlineService";
 import BarcodeScanner from "../components/barcode/BarcodeScanner";
 import UpiPaymentModal from "../components/payments/UpiPaymentModal";
 import InvoicePreviewModal from "../components/invoice/InvoicePreviewModal";
+import PriceOverrideModal from "../components/billing/PriceOverrideModal";
+import CountryPhoneInput from "../components/billing/CountryPhoneInput";
+import { formatINR } from "../utils/currency";
 
 const PAYMENT_METHODS = ["CASH", "UPI", "CARD"];
 
@@ -25,6 +28,9 @@ export default function NewBill({ products = [], onCheckout }) {
   const [upiPaid, setUpiPaid] = useState(false);
   const [savedInvoice, setSavedInvoice] = useState(null);
   const [isInvoicePreviewOpen, setIsInvoicePreviewOpen] = useState(false);
+  // Price override
+  const [priceOverrideItem, setPriceOverrideItem] = useState(null);
+  const [isPriceOverrideOpen, setIsPriceOverrideOpen] = useState(false);
 
   useEffect(() => {
     if (paymentMethod === "UPI") {
@@ -64,52 +70,85 @@ export default function NewBill({ products = [], onCheckout }) {
         alert("Product is out of stock!");
         return;
       }
-      setCart([...cart, { ...product, quantity: 1 }]);
+      // Store originalPrice for override tracking
+      setCart([
+        ...cart,
+        {
+          ...product,
+          quantity: 1,
+          originalPrice: product.price,
+          customPrice: product.price,
+        },
+      ]);
     }
     setSearchQuery("");
   };
 
   const handleBarcodeScan = (barcode) => {
     const normalizedBarcode = String(barcode || "").trim().toUpperCase();
-    const matchedProduct = products.find((product) => String(product.sku || "").trim().toUpperCase() === normalizedBarcode);
-
+    const matchedProduct = products.find(
+      (product) =>
+        String(product.sku || "").trim().toUpperCase() === normalizedBarcode
+    );
     if (!matchedProduct) {
       setScanFeedback(`No product found for ${normalizedBarcode}`);
       return;
     }
-
     addToCart(matchedProduct);
     setScanFeedback(`Added ${matchedProduct.name} to cart`);
+    setIsScannerOpen(false); // Close scanner on success so the user sees the updated cart
   };
 
   const updateQuantity = (id, delta) => {
     const item = cart.find((i) => i._id === id);
     if (!item) return;
-
     const newQty = item.quantity + delta;
     if (newQty <= 0) {
       setCart(cart.filter((i) => i._id !== id));
       return;
     }
-
     const originalProduct = products.find((p) => p._id === id);
     if (originalProduct && newQty > originalProduct.stock) {
       alert("Insufficient stock!");
       return;
     }
-
     setCart(cart.map((i) => (i._id === id ? { ...i, quantity: newQty } : i)));
   };
 
+  // Open price override modal for a cart item
+  const openPriceOverride = (item) => {
+    setPriceOverrideItem(item);
+    setIsPriceOverrideOpen(true);
+  };
+
+  const handlePriceOverrideSave = ({ customPrice, priceReason }) => {
+    setCart(
+      cart.map((item) =>
+        item._id === priceOverrideItem._id
+          ? { ...item, customPrice, priceReason }
+          : item
+      )
+    );
+    setIsPriceOverrideOpen(false);
+    setPriceOverrideItem(null);
+  };
+
+  // Subtotal uses customPrice (may differ from original for this bill)
   const subtotal = useMemo(
-    () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    () =>
+      cart.reduce(
+        (acc, item) => acc + (item.customPrice ?? item.price) * item.quantity,
+        0
+      ),
     [cart]
   );
-  const gstRate = 0.17;
-  const gstTax = Math.round(subtotal * gstRate);
 
+  // No GST
   const normalizedDiscountValue = Number(discountValue) || 0;
-  const promoDiscount = discountCode.toUpperCase() === "MALAABIS10" ? Math.round(subtotal * 0.1) : 0;
+  const promoDiscount =
+    discountCode.toUpperCase() === "MALAABIS10"
+      ? Math.round(subtotal * 0.1)
+      : 0;
   const manualDiscount =
     discountMode === "PERCENT"
       ? Math.round(subtotal * (normalizedDiscountValue / 100))
@@ -117,9 +156,10 @@ export default function NewBill({ products = [], onCheckout }) {
       ? Math.min(normalizedDiscountValue, subtotal)
       : 0;
   const discountAmount = Math.min(subtotal, manualDiscount + promoDiscount);
-  const total = Math.max(0, subtotal + gstTax - discountAmount);
+  const total = Math.max(0, subtotal - discountAmount);
   const cashReceivedAmount = Number(cashReceived) || 0;
-  const cashChange = paymentMethod === "CASH" ? Math.max(0, cashReceivedAmount - total) : 0;
+  const cashChange =
+    paymentMethod === "CASH" ? Math.max(0, cashReceivedAmount - total) : 0;
   const isPaymentReady = paymentMethod !== "UPI" || upiPaid;
 
   const handleCreateInvoice = async () => {
@@ -148,14 +188,27 @@ export default function NewBill({ products = [], onCheckout }) {
           product: item._id,
           name: item.name,
           quantity: item.quantity,
-          price: item.price,
+          price: item.customPrice ?? item.price,
+          originalPrice: item.originalPrice ?? item.price,
+          customPrice: item.customPrice ?? item.price,
+          priceReason: item.priceReason || "",
           sku: item.sku,
         })),
         subtotal,
-        gstRate,
-        gstAmount: gstTax,
-        discountType: discountCode.toUpperCase() === "MALAABIS10" ? "percent" : discountMode === "FLAT" ? "flat" : discountMode === "PERCENT" ? "percent" : "none",
-        discountValue: discountCode.toUpperCase() === "MALAABIS10" ? 10 : normalizedDiscountValue,
+        gstRate: 0,
+        gstAmount: 0,
+        discountType:
+          discountCode.toUpperCase() === "MALAABIS10"
+            ? "percent"
+            : discountMode === "FLAT"
+            ? "flat"
+            : discountMode === "PERCENT"
+            ? "percent"
+            : "none",
+        discountValue:
+          discountCode.toUpperCase() === "MALAABIS10"
+            ? 10
+            : normalizedDiscountValue,
         discountAmount,
         total,
         paymentMethod,
@@ -165,13 +218,31 @@ export default function NewBill({ products = [], onCheckout }) {
 
       let savedBill = null;
       if (typeof navigator !== "undefined" && !navigator.onLine) {
-        // Offline: queue bill and create a provisional local invoice object
         const queued = await queueBill(billPayload);
-        savedBill = { ...billPayload, _id: queued.id, invoiceNumber: `LOCAL-${queued.id}`, createdAt: new Date().toISOString(), offline: true };
+        savedBill = {
+          ...billPayload,
+          _id: queued.id,
+          invoiceNumber: `LOCAL-${queued.id}`,
+          createdAt: new Date().toISOString(),
+          offline: true,
+        };
         await onCheckout?.(savedBill);
       } else {
-        savedBill = await createBill(billPayload);
-        await onCheckout?.(savedBill);
+        try {
+          savedBill = await createBill(billPayload);
+          await onCheckout?.(savedBill);
+        } catch (onlineError) {
+          console.warn("Online checkout failed, saving invoice offline locally:", onlineError);
+          const queued = await queueBill(billPayload);
+          savedBill = {
+            ...billPayload,
+            _id: queued.id,
+            invoiceNumber: `LOCAL-${queued.id}`,
+            createdAt: new Date().toISOString(),
+            offline: true,
+          };
+          await onCheckout?.(savedBill);
+        }
       }
       setSavedInvoice(savedBill);
       setIsInvoicePreviewOpen(true);
@@ -194,27 +265,33 @@ export default function NewBill({ products = [], onCheckout }) {
   };
 
   const shareInvoiceOnWhatsApp = () => {
-    if (!savedInvoice) {
-      return;
-    }
+    if (!savedInvoice) return;
 
-    const digitsOnly = String(savedInvoice.customerMobile || customerMobile || "").replace(/\D/g, "");
-    const normalizedWhatsAppNumber = digitsOnly.startsWith("0") && digitsOnly.length === 11 ? `92${digitsOnly.slice(1)}` : digitsOnly;
+    const digitsOnly = String(
+      savedInvoice.customerMobile || customerMobile || ""
+    ).replace(/\D/g, "");
+    const normalizedWhatsAppNumber =
+      digitsOnly.startsWith("91") && digitsOnly.length === 12
+        ? digitsOnly
+        : digitsOnly.startsWith("0") && digitsOnly.length === 11
+        ? `91${digitsOnly.slice(1)}`
+        : digitsOnly;
 
     const itemLines = (savedInvoice.items || [])
       .map((item) => `- ${item.quantity} x ${item.name}`)
       .join("\n");
 
     const message = [
-      `Malaabis Studio Invoice #${savedInvoice.invoiceNumber || "N/A"}`,
-      `Customer: ${savedInvoice.customerName || "Walk-in Customer"}`,
+      `🛍️ Malaabis Studio Invoice #${savedInvoice.invoiceNumber || "N/A"}`,
+      `👤 Customer: ${savedInvoice.customerName || "Walk-in Customer"}`,
       `\nItems:\n${itemLines}`,
-      `\nSubtotal: PKR ${Number(savedInvoice.subtotal || 0).toLocaleString()}`,
-      `GST: PKR ${Number(savedInvoice.gstAmount || 0).toLocaleString()}`,
-      Number(savedInvoice.discountAmount || 0) > 0 ? `Discount: - PKR ${Number(savedInvoice.discountAmount || 0).toLocaleString()}` : null,
-      `Grand Total: PKR ${Number(savedInvoice.total || 0).toLocaleString()}`,
-      `Payment Method: ${savedInvoice.paymentMethod || "CASH"}`,
-      `Thank you for shopping with Malaabis Studio.`,
+      `\nSubtotal: ${formatINR(savedInvoice.subtotal)}`,
+      Number(savedInvoice.discountAmount || 0) > 0
+        ? `Discount: - ${formatINR(savedInvoice.discountAmount)}`
+        : null,
+      `💰 Grand Total: ${formatINR(savedInvoice.total)}`,
+      `Payment: ${savedInvoice.paymentMethod || "CASH"}`,
+      `\nThank you for shopping with Malaabis Studio! 🌟`,
     ]
       .filter(Boolean)
       .join("\n");
@@ -242,7 +319,7 @@ export default function NewBill({ products = [], onCheckout }) {
           {/* Customer Input Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="relative group">
-              <label className="absolute -top-2 left-3 bg-[#131313] px-1 text-[9px] font-semibold tracking-wider text-outline uppercase group-focus-within:text-primary transition-colors">
+              <label className="absolute -top-2 left-3 bg-[#131313] px-1 text-[9px] font-semibold tracking-wider text-outline uppercase group-focus-within:text-primary transition-colors z-10">
                 Customer Name
               </label>
               <input
@@ -253,16 +330,15 @@ export default function NewBill({ products = [], onCheckout }) {
                 onChange={(e) => setCustomerName(e.target.value)}
               />
             </div>
+
+            {/* Country Code Phone Input */}
             <div className="relative group">
-              <label className="absolute -top-2 left-3 bg-[#131313] px-1 text-[9px] font-semibold tracking-wider text-outline uppercase group-focus-within:text-primary transition-colors">
+              <label className="absolute -top-2 left-3 bg-[#131313] px-1 text-[9px] font-semibold tracking-wider text-outline uppercase group-focus-within:text-primary transition-colors z-10">
                 Mobile Number
               </label>
-              <input
-                className="w-full bg-[#1C1C1C] border border-[#4d4635]/35 rounded-lg px-4 py-2.5 text-on-surface focus:outline-none focus:border-primary text-sm h-11"
-                placeholder="e.g. 03001234567"
-                type="tel"
+              <CountryPhoneInput
                 value={customerMobile}
-                onChange={(e) => setCustomerMobile(e.target.value)}
+                onChange={(phone) => setCustomerMobile(phone)}
               />
             </div>
           </div>
@@ -293,7 +369,7 @@ export default function NewBill({ products = [], onCheckout }) {
               <button
                 type="button"
                 onClick={() => setIsScannerOpen(true)}
-                className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
                 aria-label="Open barcode scanner"
               >
                 <span className="material-symbols-outlined text-[20px]">barcode_scanner</span>
@@ -326,7 +402,7 @@ export default function NewBill({ products = [], onCheckout }) {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-primary">PKR {product.price.toLocaleString()}</p>
+                        <p className="text-sm font-bold text-primary">{formatINR(product.price)}</p>
                       </div>
                     </div>
                   ))
@@ -337,7 +413,7 @@ export default function NewBill({ products = [], onCheckout }) {
         </div>
 
         {/* Cart Item list */}
-        <div className="flex-1 overflow-y-auto mt-6 space-y-4 pr-1">
+        <div className="flex-1 overflow-y-auto mt-6 space-y-3 pr-1">
           {scanFeedback ? (
             <div className="rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary mb-2">
               {scanFeedback}
@@ -348,52 +424,129 @@ export default function NewBill({ products = [], onCheckout }) {
             <div className="flex flex-col items-center justify-center h-full text-secondary opacity-60 border border-dashed border-[#4d4635]/25 rounded-2xl p-8">
               <span className="material-symbols-outlined text-4xl mb-2">shopping_bag</span>
               <p className="text-sm font-medium">Your sales cart is empty</p>
-              <p className="text-xs text-outline mt-1 text-center">Search for items in the catalog to add them.</p>
+              <p className="text-xs text-outline mt-1 text-center">
+                Search for items in the catalog to add them.
+              </p>
             </div>
           ) : (
-            cart.map((item) => (
-              <div
-                key={item._id}
-                className="bg-[#121212] rounded-xl p-4 flex items-center gap-4 border border-[#4d4635]/10 hover:border-primary/10 transition-all duration-300"
-              >
-                <div className="w-16 h-16 rounded-lg bg-surface-variant overflow-hidden shrink-0 border border-[#4d4635]/10">
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium text-on-background truncate">{item.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="px-2 py-0.5 rounded text-[8px] uppercase font-bold bg-black border border-[#4d4635]/20 text-secondary">
-                      {item.category || "UNSTITCHED"}
-                    </span>
-                    <span className="text-[10px] font-semibold tracking-wider text-outline uppercase">
-                      SKU: {item.sku}
-                    </span>
+            cart.map((item) => {
+              const isOverridden =
+                item.customPrice !== undefined &&
+                item.customPrice !== item.originalPrice;
+              const effectivePrice = item.customPrice ?? item.price;
+              return (
+                <div
+                  key={item._id}
+                  className="bg-[#121212] rounded-xl p-3.5 border border-[#4d4635]/10 hover:border-primary/10 transition-all duration-300 flex flex-col sm:flex-row gap-4 sm:items-center relative"
+                >
+                  {/* LEFT: Product image, name, SKU, price */}
+                  <div className="flex flex-1 gap-3.5 min-w-0">
+                    <div className="w-16 h-16 sm:w-14 sm:h-14 rounded-lg bg-surface-variant overflow-hidden shrink-0 border border-[#4d4635]/10">
+                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <h3 className="text-xs sm:text-sm font-semibold text-on-background truncate leading-snug pr-12 sm:pr-0">
+                        {item.name}
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <span className="px-1.5 py-0.5 rounded text-[8px] uppercase font-bold bg-black border border-[#4d4635]/20 text-secondary">
+                          {item.category || "UNSTITCHED"}
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] font-medium tracking-wider text-outline uppercase">
+                          SKU: {item.sku}
+                        </span>
+                      </div>
+
+                      {/* Price display with override */}
+                      <div className="flex items-center gap-2 mt-1.5">
+                        {isOverridden && (
+                          <span className="text-[10px] sm:text-[11px] text-outline line-through">
+                            {formatINR(item.originalPrice)}
+                          </span>
+                        )}
+                        <span
+                          className={`text-[11px] sm:text-xs font-bold ${
+                            isOverridden ? "text-[#f2ca50]" : "text-secondary"
+                          }`}
+                        >
+                          {formatINR(effectivePrice)}
+                        </span>
+                        {isOverridden && (
+                          <span className="text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20 font-bold">
+                            Custom
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT: Controls & Total */}
+                  <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 self-stretch sm:self-auto border-t border-[#4d4635]/5 sm:border-t-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
+                    {/* Action buttons (Edit & Delete) */}
+                    <div className="flex items-center gap-2">
+                      {/* Edit price button */}
+                      <button
+                        type="button"
+                        onClick={() => openPriceOverride(item)}
+                        className="w-9 h-9 rounded-full border border-[#4d4635]/30 text-secondary flex items-center justify-center hover:text-primary hover:border-primary/50 transition-colors cursor-pointer shrink-0 active:scale-95"
+                        aria-label="Override price"
+                        title="Override price for this bill"
+                      >
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                      </button>
+
+                      {/* Delete item button */}
+                      <button
+                        type="button"
+                        onClick={() => setCart(cart.filter((i) => i._id !== item._id))}
+                        className="w-9 h-9 rounded-full border border-red-500/20 text-red-400 bg-red-500/5 flex items-center justify-center hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/40 transition-colors cursor-pointer shrink-0 active:scale-95"
+                        aria-label="Remove item"
+                        title="Remove from cart"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+
+                    {/* Quantity adjustments */}
+                    <div className="flex items-center bg-black/40 rounded-full border border-[#4d4635]/25 p-0.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item._id, -1)}
+                        className="w-8 h-8 rounded-full text-secondary flex items-center justify-center hover:text-primary transition-colors cursor-pointer active:scale-90"
+                      >
+                        <span className="material-symbols-outlined text-xs">remove</span>
+                      </button>
+                      <span className="text-xs sm:text-sm font-semibold w-7 text-center select-none text-on-background">
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item._id, 1)}
+                        className="w-8 h-8 rounded-full text-secondary flex items-center justify-center hover:text-primary transition-colors cursor-pointer active:scale-90"
+                      >
+                        <span className="material-symbols-outlined text-xs">add</span>
+                      </button>
+                    </div>
+
+                    {/* Total price for product (hidden on mobile, shown on tablet/desktop) */}
+                    <div className="text-right w-20 shrink-0 hidden sm:block">
+                      <p className="text-sm font-bold text-on-background">
+                        {formatINR(effectivePrice * item.quantity)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Mobile-only Top-Right Line Total Badge */}
+                  <div className="absolute top-3.5 right-3.5 sm:hidden">
+                    <p className="text-xs font-bold text-on-background bg-black/60 border border-[#4d4635]/15 rounded-md px-2 py-0.5">
+                      {formatINR(effectivePrice * item.quantity)}
+                    </p>
                   </div>
                 </div>
-                {/* Quantity adjustments */}
-                <div className="flex items-center gap-2.5">
-                  <button
-                    onClick={() => updateQuantity(item._id, -1)}
-                    className="w-8 h-8 rounded-full border border-[#4d4635]/30 text-secondary flex items-center justify-center hover:text-primary hover:border-primary/50 transition-colors cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-sm">remove</span>
-                  </button>
-                  <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item._id, 1)}
-                    className="w-8 h-8 rounded-full border border-[#4d4635]/30 text-secondary flex items-center justify-center hover:text-primary hover:border-primary/50 transition-colors cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-sm">add</span>
-                  </button>
-                </div>
-                {/* Total price for product */}
-                <div className="text-right w-24 shrink-0">
-                  <p className="text-sm font-semibold text-on-background">
-                    PKR {(item.price * item.quantity).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>
@@ -408,21 +561,17 @@ export default function NewBill({ products = [], onCheckout }) {
       <section className="w-full lg:w-[380px] bg-[#121212] flex flex-col h-full shrink-0 shadow-[-8px_0_24px_rgba(0,0,0,0.5)] border-t lg:border-t-0 lg:border-l border-[#4d4635]/15 p-4 md:p-6 pb-24 lg:pb-6 overflow-y-auto">
         <div className="flex-1 flex flex-col justify-between">
           <div>
-            <h2 className="font-headline text-2xl text-on-background mb-8">Summary</h2>
+            <h2 className="font-headline text-2xl text-on-background mb-6">Summary</h2>
             <div className="space-y-4">
               <div className="flex justify-between items-center text-secondary text-sm">
                 <span>Subtotal</span>
-                <span className="text-on-background font-medium">PKR {subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center text-secondary text-sm">
-                <span>GST (17%)</span>
-                <span className="text-on-background font-medium">PKR {gstTax.toLocaleString()}</span>
+                <span className="text-on-background font-medium">{formatINR(subtotal)}</span>
               </div>
 
               {discountAmount > 0 && (
                 <div className="flex justify-between items-center text-primary text-sm font-medium">
                   <span>Discount</span>
-                  <span>- PKR {discountAmount.toLocaleString()}</span>
+                  <span>− {formatINR(discountAmount)}</span>
                 </div>
               )}
 
@@ -431,21 +580,49 @@ export default function NewBill({ products = [], onCheckout }) {
                   Discount Type
                 </label>
                 <div className="flex gap-2 mb-3">
-                  <button type="button" onClick={() => setDiscountMode("NONE")} className={`flex-1 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider border ${discountMode === "NONE" ? "bg-primary text-black border-primary" : "border-[#4d4635]/35 text-secondary"}`}>
+                  <button
+                    type="button"
+                    onClick={() => setDiscountMode("NONE")}
+                    className={`flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-colors ${
+                      discountMode === "NONE"
+                        ? "bg-primary text-black border-primary"
+                        : "border-[#4d4635]/35 text-secondary hover:border-primary/30"
+                    }`}
+                  >
                     None
                   </button>
-                  <button type="button" onClick={() => setDiscountMode("FLAT")} className={`flex-1 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider border ${discountMode === "FLAT" ? "bg-primary text-black border-primary" : "border-[#4d4635]/35 text-secondary"}`}>
+                  <button
+                    type="button"
+                    onClick={() => setDiscountMode("FLAT")}
+                    className={`flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-colors ${
+                      discountMode === "FLAT"
+                        ? "bg-primary text-black border-primary"
+                        : "border-[#4d4635]/35 text-secondary hover:border-primary/30"
+                    }`}
+                  >
                     Flat
                   </button>
-                  <button type="button" onClick={() => setDiscountMode("PERCENT")} className={`flex-1 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider border ${discountMode === "PERCENT" ? "bg-primary text-black border-primary" : "border-[#4d4635]/35 text-secondary"}`}>
+                  <button
+                    type="button"
+                    onClick={() => setDiscountMode("PERCENT")}
+                    className={`flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-colors ${
+                      discountMode === "PERCENT"
+                        ? "bg-primary text-black border-primary"
+                        : "border-[#4d4635]/35 text-secondary hover:border-primary/30"
+                    }`}
+                  >
                     %
                   </button>
                 </div>
 
                 {discountMode !== "NONE" && (
                   <input
-                    className="w-full bg-background text-on-background border border-[#4d4635]/35 rounded-lg px-3 py-2 focus:border-primary placeholder:text-[#353535] text-sm focus:outline-none mb-3"
-                    placeholder={discountMode === "PERCENT" ? "Enter discount percent" : "Enter discount amount"}
+                    className="w-full bg-background text-on-background border border-[#4d4635]/35 rounded-lg px-3 py-2.5 focus:border-primary placeholder:text-[#353535] text-sm focus:outline-none mb-3"
+                    placeholder={
+                      discountMode === "PERCENT"
+                        ? "Enter discount percent"
+                        : "Enter discount amount"
+                    }
                     type="number"
                     min="0"
                     value={discountValue}
@@ -458,7 +635,7 @@ export default function NewBill({ products = [], onCheckout }) {
                 </label>
                 <div className="relative flex gap-2">
                   <input
-                    className="flex-1 bg-background text-on-background border border-[#4d4635]/35 rounded-lg px-3 py-2 focus:border-primary placeholder:text-[#353535] text-sm focus:outline-none"
+                    className="flex-1 bg-background text-on-background border border-[#4d4635]/35 rounded-lg px-3 py-2.5 focus:border-primary placeholder:text-[#353535] text-sm focus:outline-none"
                     placeholder="Enter discount code..."
                     type="text"
                     value={discountCode}
@@ -477,7 +654,11 @@ export default function NewBill({ products = [], onCheckout }) {
                       key={method}
                       type="button"
                       onClick={() => setPaymentMethod(method)}
-                      className={`py-2 rounded-lg text-xs font-semibold uppercase tracking-wider border ${paymentMethod === method ? "bg-primary text-black border-primary" : "border-[#4d4635]/35 text-secondary"}`}
+                      className={`py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-colors ${
+                        paymentMethod === method
+                          ? "bg-primary text-black border-primary"
+                          : "border-[#4d4635]/35 text-secondary hover:border-primary/30"
+                      }`}
                     >
                       {method}
                     </button>
@@ -489,7 +670,7 @@ export default function NewBill({ products = [], onCheckout }) {
                     onClick={() => setIsUpiModalOpen(true)}
                     className="mt-3 w-full min-h-[44px] rounded-xl border border-primary/25 bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider hover:bg-primary/15 transition-colors"
                   >
-                    {upiPaid ? "UPI payment completed" : "Open UPI QR"}
+                    {upiPaid ? "✓ UPI Payment Completed" : "Open UPI QR Code"}
                   </button>
                 ) : null}
                 {paymentMethod === "CASH" && (
@@ -498,14 +679,16 @@ export default function NewBill({ products = [], onCheckout }) {
                       Cash Received
                     </label>
                     <input
-                      className="w-full bg-background text-on-background border border-[#4d4635]/35 rounded-lg px-3 py-2 focus:border-primary placeholder:text-[#353535] text-sm focus:outline-none"
+                      className="w-full bg-background text-on-background border border-[#4d4635]/35 rounded-lg px-3 py-2.5 focus:border-primary placeholder:text-[#353535] text-sm focus:outline-none"
                       placeholder="Enter cash amount"
                       type="number"
                       min="0"
                       value={cashReceived}
                       onChange={(e) => setCashReceived(e.target.value)}
                     />
-                    <p className="text-xs text-outline mt-2">Change: PKR {cashChange.toLocaleString()}</p>
+                    <p className="text-xs text-outline mt-2">
+                      Change: {formatINR(cashChange)}
+                    </p>
                     {cashReceivedAmount >= total && total > 0 ? (
                       <p className="text-xs text-primary mt-2 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[16px]">verified</span>
@@ -518,18 +701,49 @@ export default function NewBill({ products = [], onCheckout }) {
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-primary/20">
-            <div className="flex justify-between items-end mb-6">
-              <span className="text-sm text-secondary pb-1">Total Amount</span>
+          {/* Grand Total + Checkout */}
+          <div className="mt-6 pt-5 border-t border-primary/20">
+            {/* Totals breakdown */}
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between items-center text-secondary text-xs">
+                <span>Subtotal</span>
+                <span>{formatINR(subtotal)}</span>
+              </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between items-center text-primary text-xs">
+                  <span>Discount</span>
+                  <span>− {formatINR(discountAmount)}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Grand Total highlight */}
+            <div className="rounded-2xl bg-primary/8 border border-primary/20 px-4 py-3.5 flex justify-between items-center mb-4">
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.25em] text-primary/70 font-semibold">
+                  Grand Total
+                </p>
+                <p className="text-[10px] text-secondary mt-0.5">Payable Amount</p>
+              </div>
               <span className="font-headline text-3xl text-primary tracking-tight">
-                PKR {total.toLocaleString()}
+                {formatINR(total)}
               </span>
             </div>
-            {submitError ? <p className="text-sm text-error mb-3">{submitError}</p> : null}
+
+            {submitError ? (
+              <p className="text-sm text-error mb-3">{submitError}</p>
+            ) : null}
             <button
+              id="generate-invoice-btn"
               onClick={handleCreateInvoice}
-              disabled={isSubmitting || !isPaymentReady || (paymentMethod === "CASH" && cashReceivedAmount < total && total > 0)}
-              className="w-full bg-primary text-black font-semibold text-xs uppercase tracking-wider py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#ffe088] transition-all duration-200 active:scale-98 shadow-[0_0_15px_rgba(212,175,55,0.2)] cursor-pointer disabled:opacity-60"
+              disabled={
+                isSubmitting ||
+                !isPaymentReady ||
+                (paymentMethod === "CASH" &&
+                  cashReceivedAmount < total &&
+                  total > 0)
+              }
+              className="w-full bg-primary text-black font-semibold text-xs uppercase tracking-wider py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#ffe088] transition-all duration-200 active:scale-[0.98] shadow-[0_0_15px_rgba(212,175,55,0.2)] cursor-pointer disabled:opacity-60"
             >
               <span className="material-symbols-outlined text-lg">point_of_sale</span>
               {isSubmitting
@@ -555,6 +769,17 @@ export default function NewBill({ products = [], onCheckout }) {
         onClose={() => setIsInvoicePreviewOpen(false)}
         onShareWhatsApp={shareInvoiceOnWhatsApp}
         onPrint={printInvoice}
+      />
+
+      {/* Price Override Modal */}
+      <PriceOverrideModal
+        open={isPriceOverrideOpen}
+        item={priceOverrideItem}
+        onSave={handlePriceOverrideSave}
+        onClose={() => {
+          setIsPriceOverrideOpen(false);
+          setPriceOverrideItem(null);
+        }}
       />
     </div>
   );

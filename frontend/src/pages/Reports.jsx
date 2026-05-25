@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getReportsDashboard } from "../services/reportsApi";
+import { formatINR } from "../utils/currency";
 
 const TIMEFRAMES = ["DAILY", "WEEKLY", "MONTHLY"];
 
 function formatCurrency(value) {
-  return `PKR ${Number(value || 0).toLocaleString()}`;
+  return formatINR(value);
 }
 
 function SummaryCard({ title, value, icon, subtitle, tone = "gold" }) {

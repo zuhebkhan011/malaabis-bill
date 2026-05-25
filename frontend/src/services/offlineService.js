@@ -1,4 +1,4 @@
-import { putProducts, getAllProducts, enqueue, getQueue, deleteQueueItem } from "../utils/offlineSync";
+import { putProducts, getAllProducts, enqueue, getQueue, deleteQueueItem, putInvoice, getAllInvoices, deleteInvoice, putProductImage, getProductImage, getAllProductImages, deleteProductImage } from "../utils/offlineSync";
 import { API_BASE_URL } from "./productApi";
 
 const CHECK_ONLINE = () => typeof navigator !== "undefined" && navigator.onLine;
@@ -19,6 +19,46 @@ async function loadCachedProducts() {
     return [];
   }
 }
+
+// ─── Invoice Local Storage ────────────────────────────────────────────────────
+
+/**
+ * Save an invoice to local device storage (IndexedDB).
+ * Called after every successful or offline bill creation.
+ */
+async function saveInvoiceLocally(invoice) {
+  try {
+    if (!invoice || !invoice._id) return;
+    await putInvoice(invoice);
+  } catch (e) {
+    console.warn("Failed to save invoice locally", e);
+  }
+}
+
+/**
+ * Load all locally saved invoices from device storage.
+ */
+async function loadSavedInvoices() {
+  try {
+    return await getAllInvoices();
+  } catch (e) {
+    console.warn("Failed to load saved invoices", e);
+    return [];
+  }
+}
+
+/**
+ * Delete a saved invoice from device storage.
+ */
+async function removeSavedInvoice(id) {
+  try {
+    await deleteInvoice(id);
+  } catch (e) {
+    console.warn("Failed to delete saved invoice", e);
+  }
+}
+
+// ─── Bill Queue ───────────────────────────────────────────────────────────────
 
 // Enqueue a bill for later sync
 async function queueBill(billPayload) {
@@ -70,4 +110,4 @@ async function syncOnce(onProgress) {
   return { ok: true };
 }
 
-export { cacheProducts, loadCachedProducts, queueBill, queueProductCreate, queueProductUpdate, queueProductDelete, syncOnce };
+export { cacheProducts, loadCachedProducts, queueBill, queueProductCreate, queueProductUpdate, queueProductDelete, syncOnce, saveInvoiceLocally, loadSavedInvoices, removeSavedInvoice, putProductImage, getProductImage, getAllProductImages, deleteProductImage };

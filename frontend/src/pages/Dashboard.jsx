@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatINR } from "../utils/currency";
 
 export default function Dashboard({ setView, products = [], recentBills = [] }) {
   const today = new Date();
@@ -36,7 +37,7 @@ export default function Dashboard({ setView, products = [], recentBills = [] }) 
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <p className="text-[10px] font-semibold tracking-wider text-outline uppercase mb-2">Total Sales Today</p>
-              <h3 className="text-2xl font-bold text-primary">PKR {todaySales.toLocaleString()}</h3>
+              <h3 className="text-2xl font-bold text-primary">{formatINR(todaySales)}</h3>
             </div>
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
               <span className="material-symbols-outlined text-primary text-xl">payments</span>
@@ -153,7 +154,7 @@ export default function Dashboard({ setView, products = [], recentBills = [] }) 
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-primary">PKR {bill.total.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-primary">{formatINR(bill.total)}</p>
                     <span className="inline-block mt-1 px-2 py-0.5 rounded text-[8px] uppercase font-bold tracking-wider bg-primary/10 text-primary border border-primary/20">
                       PAID
                     </span>

@@ -66,11 +66,15 @@ const createBill = async (req, res) => {
     }
 
     for (const change of stockChanges) {
-      await Product.findByIdAndUpdate(
+      const updatedProduct = await Product.findByIdAndUpdate(
         change.productId,
         { stock: change.nextStock },
         { new: true }
       );
+      if (req.io && updatedProduct) {
+        req.io.emit("stock-updated", { productId: change.productId, stock: change.nextStock });
+        req.io.emit("product-updated", updatedProduct);
+      }
     }
 
     const savedBill = await Bill.create({
@@ -90,6 +94,12 @@ const createBill = async (req, res) => {
       cashReceived,
       cashChange,
     });
+
+    if (req.io) {
+      req.io.emit("invoice-created", savedBill);
+      req.io.emit("bill-generated", savedBill);
+      req.io.emit("reports-updated", { type: "bill", action: "create" });
+    }
 
     res.status(201).json(savedBill);
   } catch (error) {

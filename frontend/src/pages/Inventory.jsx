@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import BarcodePrintPreview from "../components/barcode/BarcodePrintPreview";
+import { formatINR } from "../utils/currency";
 
 export default function Inventory({
   products = [],
@@ -198,7 +199,7 @@ export default function Inventory({
                       {product.name}
                     </h3>
                     <p className="text-primary font-medium text-sm mt-2">
-                      PKR {product.price.toLocaleString()}
+                      {formatINR(product.price)}
                     </p>
                   </div>
 
@@ -284,7 +285,7 @@ export default function Inventory({
 
                 <div className="relative group">
                   <label className="absolute -top-2 left-3 bg-[#121212] px-1 text-[10px] font-semibold tracking-wider text-outline group-focus-within:text-primary transition-colors">
-                    PRICE (PKR)
+                    PRICE (INR)
                   </label>
                   <input
                     required
@@ -327,18 +328,83 @@ export default function Inventory({
                 </div>
               </div>
 
-              {/* Image URL */}
-              <div className="relative group">
-                <label className="absolute -top-2 left-3 bg-[#121212] px-1 text-[10px] font-semibold tracking-wider text-outline group-focus-within:text-primary transition-colors">
-                  IMAGE URL (OPTIONAL)
+              {/* Image Upload & URL input */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold tracking-wider text-outline block uppercase">
+                  Product Image
                 </label>
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full bg-[#1C1C1C] border border-[#4d4635]/35 rounded-lg px-4 py-3.5 text-on-surface focus:outline-none focus:border-primary text-sm h-12"
-                />
+                
+                <div className="flex gap-4 items-center">
+                  {imageUrl ? (
+                    <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#4d4635]/30 bg-surface-container shrink-0 group/img">
+                      <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setImageUrl("")}
+                        className="absolute inset-0 bg-black/60 flex items-center justify-center text-red-400 opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 cursor-pointer"
+                        title="Remove image"
+                      >
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg border border-dashed border-[#4d4635]/30 flex items-center justify-center text-outline bg-[#1C1C1C] shrink-0">
+                      <span className="material-symbols-outlined text-lg">image</span>
+                    </div>
+                  )}
+
+                  <div className="flex-1 flex flex-col gap-2">
+                    <label className="min-h-[44px] rounded-lg border border-primary/30 bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider hover:bg-primary/20 transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+                      <span className="material-symbols-outlined text-sm">cloud_upload</span>
+                      Upload Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            // Compress image before converting to base64
+                            const img = new Image();
+                            const objectUrl = URL.createObjectURL(file);
+                            img.onload = () => {
+                              URL.revokeObjectURL(objectUrl);
+                              const MAX_SIZE = 400;
+                              let w = img.width;
+                              let h = img.height;
+                              if (w > MAX_SIZE || h > MAX_SIZE) {
+                                if (w > h) { h = Math.round((h * MAX_SIZE) / w); w = MAX_SIZE; }
+                                else { w = Math.round((w * MAX_SIZE) / h); h = MAX_SIZE; }
+                              }
+                              const canvas = document.createElement("canvas");
+                              canvas.width = w;
+                              canvas.height = h;
+                              const ctx = canvas.getContext("2d");
+                              ctx.drawImage(img, 0, 0, w, h);
+                              const compressed = canvas.toDataURL("image/jpeg", 0.7);
+                              setImageUrl(compressed);
+                            };
+                            img.onerror = () => {
+                              // fallback: just read as-is
+                              const reader = new FileReader();
+                              reader.onloadend = () => setImageUrl(reader.result);
+                              reader.readAsDataURL(file);
+                            };
+                            img.src = objectUrl;
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    
+                    <input
+                      type="url"
+                      value={imageUrl && !imageUrl.startsWith("data:") ? imageUrl : ""}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="Or paste image URL..."
+                      className="w-full bg-[#1C1C1C] border border-[#4d4635]/35 rounded-lg px-3 py-2 text-on-surface focus:outline-none focus:border-primary text-xs h-9"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Actions */}

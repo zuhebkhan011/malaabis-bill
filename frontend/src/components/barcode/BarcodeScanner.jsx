@@ -97,10 +97,12 @@ export default function BarcodeScanner({ open, onClose, onDetected }) {
         locate: true,
         decoder: {
           readers: [
-            "code_39_reader",
             "code_128_reader",
             "ean_reader",
             "ean_8_reader",
+            "upc_reader",
+            "upc_e_reader",
+            "code_39_reader",
           ],
         },
       },
