@@ -1,0 +1,8 @@
+{
+  "appId": "com.malaabis.pos",
+  "appName": "Malaabis Studio",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
