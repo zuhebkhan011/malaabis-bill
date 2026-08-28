@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scanner - Malaabis Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#4d4635",
+                        "on-surface-variant": "#d0c5af",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "secondary-container": "#454747",
+                        "outline": "#99907c",
+                        "surface-variant": "#353535",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed": "#e5e2e1",
+                        "on-primary-fixed": "#241a00",
+                        "on-primary-container": "#554300",
+                        "on-tertiary-container": "#454545",
+                        "surface-tint": "#e9c349",
+                        "primary-fixed": "#ffe088",
+                        "on-primary-fixed-variant": "#574500",
+                        "primary": "#f2ca50",
+                        "on-secondary-fixed-variant": "#454747",
+                        "inverse-primary": "#735c00",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "surface-container-low": "#1b1b1b",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-bright": "#393939",
+                        "inverse-on-surface": "#303030",
+                        "background": "#131313",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed-dim": "#e9c349",
+                        "primary-container": "#d4af37",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "on-secondary": "#2f3131",
+                        "surface-dim": "#131313",
+                        "on-secondary-container": "#b4b5b5",
+                        "error-container": "#93000a",
+                        "surface-container-highest": "#353535",
+                        "surface-container-lowest": "#0e0e0e",
+                        "secondary-fixed": "#e2e2e2",
+                        "tertiary": "#d0cecd",
+                        "secondary": "#c6c6c7",
+                        "surface-container": "#1f1f1f",
+                        "surface": "#131313",
+                        "on-primary": "#3c2f00",
+                        "on-tertiary": "#313030",
+                        "on-error": "#690005",
+                        "tertiary-container": "#b5b2b2",
+                        "on-surface": "#e2e2e2",
+                        "on-background": "#e2e2e2",
+                        "inverse-surface": "#e2e2e2",
+                        "on-tertiary-fixed": "#1c1b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "base": "8px",
+                        "section-gap": "40px",
+                        "container-margin": "24px",
+                        "touch-target-min": "48px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Playfair Display"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Playfair Display"],
+                        "headline-lg": ["Playfair Display"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom styles for the scanner interface */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Scanning laser animation */
+        @keyframes scan {
+            0%, 100% {
+                transform: translateY(0);
+                opacity: 0;
+            }
+            10%, 90% {
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(14rem); /* Matches the h-56 of the frame roughly */
+            }
+        }
+        
+        .animate-scan-laser {
+            animation: scan 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        /* The darkened area outside the scanning frame */
+        .scanner-mask {
+            box-shadow: 0 0 0 9999px rgba(19, 19, 19, 0.85); /* Uses #131313 hex equivalent */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background h-[884px] w-full overflow-hidden flex flex-col font-body-md text-body-md antialiased relative">
+<!-- Simulated Camera Feed Background -->
+<div class="absolute inset-0 z-0 bg-surface-container-low" data-alt="A close-up photograph simulating a mobile phone camera feed pointing at a piece of dark, premium clothing fabric. The fabric has a subtle woven texture visible under soft, moody studio lighting. The overall scene is dark and adheres strictly to a luxury noir aesthetic, serving as an atmospheric background for a barcode scanning interface." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB0xKplQrEiQoTZraR2xMzeAcOpmJr9KkKGnfK7GJadfYP1JeFlbPki7YHxcZTM7jW1_3oQUmfOmV86nSoBEGSKbNTmdS3Rmriu6J7LEshXpxsocdb_YmboiIriXzTWIB-t6pvE1svz2IFPXYY6TihkxvUUCS4z8DY-a3ZrvKJn6fPDPuPqur_LTImRi9iQ7luqEGxJ2ioZbE5Cz-DZ_qqxx-apFhAzt43CHuonmXwlKXpKEehQd8HpYOJuk3q6hMulwuK1NLUYteFL'); background-size: cover; background-position: center;">
+</div>
+<!-- Top Action Bar (Task Focused - No global nav) -->
+<header class="w-full flex justify-between items-center px-container-margin py-base z-20 absolute top-0 left-0 bg-gradient-to-b from-background/90 to-transparent">
+<button aria-label="Close Scanner" class="w-touch-target-min h-touch-target-min flex items-center justify-start text-on-background hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-2xl">close</span>
+</button>
+<h1 class="font-label-caps text-label-caps text-primary tracking-[0.2em] uppercase">Scan Item</h1>
+<button aria-label="Toggle Flashlight" class="w-touch-target-min h-touch-target-min flex items-center justify-end text-on-background hover:text-primary transition-colors" id="flashlight-toggle">
+<span class="material-symbols-outlined text-2xl" id="flashlight-icon">flashlight_on</span>
+</button>
+</header>
+<!-- Main Viewfinder Area -->
+<main class="flex-1 flex flex-col items-center justify-center relative z-10 w-full h-full">
+<!-- The Target Frame -->
+<div class="relative w-[280px] h-[280px] scanner-mask rounded-2xl flex items-center justify-center">
+<!-- Corner Accents (Gold) -->
+<div class="absolute top-0 left-0 w-10 h-10 border-t-[3px] border-l-[3px] border-primary rounded-tl-2xl"></div>
+<div class="absolute top-0 right-0 w-10 h-10 border-t-[3px] border-r-[3px] border-primary rounded-tr-2xl"></div>
+<div class="absolute bottom-0 left-0 w-10 h-10 border-b-[3px] border-l-[3px] border-primary rounded-bl-2xl"></div>
+<div class="absolute bottom-0 right-0 w-10 h-10 border-b-[3px] border-r-[3px] border-primary rounded-br-2xl"></div>
+<!-- Central Focus Guide (Subtle) -->
+<div class="w-full h-[2px] bg-primary/20 absolute top-1/2 left-0 -translate-y-1/2"></div>
+<div class="h-full w-[2px] bg-primary/20 absolute top-0 left-1/2 -translate-x-1/2"></div>
+<!-- Animated Laser Line -->
+<div class="absolute top-0 left-4 right-4 h-[2px] bg-primary shadow-[0_0_12px_2px_rgba(212,175,55,0.6)] animate-scan-laser rounded-full z-30"></div>
+</div>
+<!-- Instructional Text directly below frame -->
+<div class="mt-section-gap z-20 text-center px-8">
+<p class="font-body-md text-body-md text-on-surface-variant font-light tracking-wide">
+                Align barcode within the frame to scan
+            </p>
+<div class="mt-4 flex items-center justify-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-primary/80">Scanning Active</span>
+</div>
+</div>
+</main>
+<!-- Bottom Actions Area -->
+<footer class="w-full px-container-margin pb-[calc(24px+env(safe-area-inset-bottom))] pt-8 z-20 absolute bottom-0 left-0 bg-gradient-to-t from-background via-background/95 to-transparent flex flex-col gap-4">
+<!-- Manual Entry Button (Secondary Style) -->
+<button class="w-full h-[56px] rounded-xl border border-primary/30 bg-surface-container/50 backdrop-blur-md flex items-center justify-center gap-3 hover:border-primary hover:bg-surface-container transition-all group">
+<span class="material-symbols-outlined text-primary/80 group-hover:text-primary transition-colors">keyboard</span>
+<span class="font-label-caps text-label-caps text-on-background tracking-widest uppercase">Enter Barcode Manually</span>
+</button>
+<!-- Auxiliary Action (Ghost Style) -->
+<div class="flex justify-center mt-2">
+<button class="flex items-center gap-2 px-4 py-2 opacity-60 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-label-sm text-label-sm">Browse Inventory</span>
+</button>
+</div>
+</footer>
+<!-- Simple Interaction Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const flashlightToggle = document.getElementById('flashlight-toggle');
+            const flashlightIcon = document.getElementById('flashlight-icon');
+            let isFlashlightOn = false;
+
+            flashlightToggle.addEventListener('click', () => {
+                isFlashlightOn = !isFlashlightOn;
+                
+                if (isFlashlightOn) {
+                    flashlightIcon.textContent = 'flashlight_off';
+                    flashlightIcon.style.fontVariationSettings = "'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24";
+                    flashlightIcon.classList.add('text-primary');
+                } else {
+                    flashlightIcon.textContent = 'flashlight_on';
+                    flashlightIcon.style.fontVariationSettings = "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24";
+                    flashlightIcon.classList.remove('text-primary');
+                }
+            });
+        });
+    </script>
+</body></html>

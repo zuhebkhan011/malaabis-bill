@@ -1,0 +1,156 @@
+import { putProducts, getAllProducts, enqueue, getQueue, deleteQueueItem, putInvoice, getAllInvoices, deleteInvoice, putProductImage, getProductImage, getAllProductImages, deleteProductImage, updateQueuedBill } from "../utils/offlineSync";
+import { API_BASE_URL } from "./productApi";
+
+const CHECK_ONLINE = () => typeof navigator !== "undefined" && navigator.onLine;
+
+async function cacheProducts(products) {
+  try {
+    await putProducts(products || []);
+  } catch (e) {
+    console.warn("Failed to cache products", e);
+  }
+}
+
+async function loadCachedProducts() {
+  try {
+    return await getAllProducts();
+  } catch (e) {
+    console.warn("Failed to load cached products", e);
+    return [];
+  }
+}
+
+// ─── Invoice Local Storage ────────────────────────────────────────────────────
+
+/**
+ * Save an invoice to local device storage (IndexedDB).
+ * Called after every successful or offline bill creation.
+ */
+async function saveInvoiceLocally(invoice) {
+  try {
+    if (!invoice || !invoice._id) return;
+    await putInvoice(invoice);
+  } catch (e) {
+    console.warn("Failed to save invoice locally", e);
+  }
+}
+
+/**
+ * Load all locally saved invoices from device storage.
+ */
+async function loadSavedInvoices() {
+  try {
+    return await getAllInvoices();
+  } catch (e) {
+    console.warn("Failed to load saved invoices", e);
+    return [];
+  }
+}
+
+/**
+ * Delete a saved invoice from device storage.
+ */
+async function removeSavedInvoice(id) {
+  try {
+    await deleteInvoice(id);
+  } catch (e) {
+    console.warn("Failed to delete saved invoice", e);
+  }
+}
+
+// ─── Bill Queue ───────────────────────────────────────────────────────────────
+
+// Enqueue a bill for later sync
+async function queueBill(billPayload) {
+  const clientId = billPayload.clientId || `client-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+  const payload = { ...billPayload, clientId };
+  const item = { type: "bill", payload };
+  return enqueue(item);
+}
+
+async function queueBillUpdate(id, payload) {
+  return enqueue({ type: "bill_update", payload: { id, payload } });
+}
+
+async function queueBillDelete(id) {
+  return enqueue({ type: "bill_delete", payload: { id } });
+}
+
+async function queueProductUpdate(product) {
+  return enqueue({ type: "product_update", payload: product });
+}
+
+async function queueProductDelete(product) {
+  return enqueue({ type: "product_delete", payload: product });
+}
+
+async function queueProductCreate(product) {
+  return enqueue({ type: "product_create", payload: product });
+}
+
+async function syncOnce(onProgress) {
+  if (!CHECK_ONLINE()) return { ok: false, reason: "offline" };
+  const q = await getQueue();
+  for (const entry of q.sort((a,b)=>a.createdAt - b.createdAt)) {
+    try {
+      onProgress?.({ id: entry.id, status: "syncing", entry });
+      if (entry.type === "bill") {
+        const response = await fetch(`${API_BASE_URL}/bills/checkout`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry.payload) });
+        if (response.ok) {
+          const savedBill = await response.json().catch(() => null);
+          if (savedBill && savedBill._id) {
+            try {
+              // Cache the real synced bill locally
+              await putInvoice(savedBill);
+              // Clean up the temporary local offline invoice
+              await deleteInvoice(entry.id);
+              if (entry.payload.clientId) {
+                await deleteInvoice(entry.payload.clientId);
+              }
+            } catch (localErr) {
+              console.warn("Failed to update synced invoice in local store:", localErr);
+            }
+            try {
+              const { InvoicePDFService } = await import("./InvoicePDFService");
+              const { uploadBillPDF } = await import("./billingApi");
+              const pdfBase64 = await InvoicePDFService.generatePDFBase64(savedBill);
+              await uploadBillPDF(savedBill._id, pdfBase64);
+              console.log(`Auto PDF uploaded successfully for synced invoice #${savedBill.invoiceNumber}`);
+            } catch (pdfErr) {
+              console.warn("Auto PDF generation/upload failed for synced bill:", pdfErr);
+            }
+          }
+        }
+      } else if (entry.type === "product_update") {
+        const p = entry.payload;
+        await fetch(`${API_BASE_URL}/products/${p._id || p.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });
+      } else if (entry.type === "product_create") {
+        const p = entry.payload;
+        await fetch(`${API_BASE_URL}/products`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });
+      } else if (entry.type === "product_delete") {
+        const p = entry.payload;
+        await fetch(`${API_BASE_URL}/products/${p._id || p.id}`, { method: "DELETE" });
+      } else if (entry.type === "bill_update") {
+        const { id, payload } = entry.payload;
+        await fetch(`${API_BASE_URL}/bills/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, user: "admin" })
+        });
+      } else if (entry.type === "bill_delete") {
+        const { id } = entry.payload;
+        await fetch(`${API_BASE_URL}/bills/${id}`, { method: "DELETE" });
+      }
+      await deleteQueueItem(entry.id);
+      onProgress?.({ id: entry.id, status: "done" });
+    } catch (err) {
+      console.warn("Sync failed for", entry, err);
+      onProgress?.({ id: entry.id, status: "failed", error: err.message || String(err) });
+      // Do not delete on failure; stop further processing to preserve order
+      return { ok: false, reason: "entry_failed", entry };
+    }
+  }
+  return { ok: true };
+}
+
+export { cacheProducts, loadCachedProducts, queueBill, queueBillUpdate, queueBillDelete, queueProductCreate, queueProductUpdate, queueProductDelete, syncOnce, saveInvoiceLocally, loadSavedInvoices, removeSavedInvoice, putProductImage, getProductImage, getAllProductImages, deleteProductImage, updateQueuedBill, getQueue, deleteQueueItem };
