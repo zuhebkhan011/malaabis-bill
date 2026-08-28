@@ -16,7 +16,7 @@ export const getProductImageUrl = (url) => {
     return DEFAULT_PRODUCT_IMAGE;
   }
 
-  // Already a full URL (Cloudinary, Unsplash, etc.)
+  // Already a full URL (Unsplash, external URL, data URI, etc.)
   if (url.startsWith("data:") || url.startsWith("http://") || url.startsWith("https://")) {
     return url;
   }

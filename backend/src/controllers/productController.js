@@ -10,27 +10,6 @@ const saveBase64Image = async (base64Data) => {
     return base64Data;
   }
 
-  // Try uploading to Cloudinary
-  if (process.env.CLOUDINARY_CLOUD_NAME) {
-    try {
-      const cloudinary = require("cloudinary").v2;
-      cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-      });
-
-      console.log("☁️ Uploading image to Cloudinary...");
-      const result = await cloudinary.uploader.upload(base64Data, {
-        folder: "malaabis_products",
-      });
-      console.log("✅ Cloudinary upload successful:", result.secure_url);
-      return result.secure_url;
-    } catch (cloudinaryErr) {
-      console.error("❌ Cloudinary upload failed, falling back to local storage:", cloudinaryErr);
-    }
-  }
-
   try {
     const matches = base64Data.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
     if (!matches || matches.length !== 3) {
