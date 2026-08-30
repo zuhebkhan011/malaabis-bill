@@ -3,6 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 import { createRoot } from "react-dom/client";
 import InvoiceTemplate from "../components/invoice/InvoiceTemplate";
 
@@ -187,26 +188,35 @@ export const InvoicePDFService = {
         directory: Directory.Cache,
       });
 
-      if (navigator.share) {
-        try {
-          const blob = pdf.output("blob");
-          const file = new File([blob], fileName, { type: "application/pdf" });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: "Share Invoice PDF",
-              text: `Malaabis Studio Invoice #${invoice.invoiceNumber || ""}`,
-              files: [file],
-            });
-          } else {
-            await navigator.share({
-              title: "Share Invoice PDF",
-              text: `Malaabis Studio Invoice #${invoice.invoiceNumber || ""}`,
-              url: writeResult.uri,
-            });
-          }
-        } catch (e) {
-          if (e.name !== "AbortError") {
-            console.warn("Native share error:", e);
+      try {
+        await Share.share({
+          title: "Share Invoice PDF",
+          text: `Malaabis Studio Invoice #${invoice.invoiceNumber || ""}`,
+          url: writeResult.uri,
+          dialogTitle: "Share or Save Invoice",
+        });
+      } catch (shareErr) {
+        if (navigator.share) {
+          try {
+            const blob = pdf.output("blob");
+            const file = new File([blob], fileName, { type: "application/pdf" });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: "Share Invoice PDF",
+                text: `Malaabis Studio Invoice #${invoice.invoiceNumber || ""}`,
+                files: [file],
+              });
+            } else {
+              await navigator.share({
+                title: "Share Invoice PDF",
+                text: `Malaabis Studio Invoice #${invoice.invoiceNumber || ""}`,
+                url: writeResult.uri,
+              });
+            }
+          } catch (e) {
+            if (e.name !== "AbortError") {
+              console.warn("Native share error:", e);
+            }
           }
         }
       }

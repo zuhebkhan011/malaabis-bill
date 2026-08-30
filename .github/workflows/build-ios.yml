@@ -21,8 +21,7 @@ jobs:
       - name: Install Frontend Dependencies
         run: |
           cd frontend
-          rm -rf node_modules package-lock.json
-          npm install
+          npm ci
 
       - name: Build Web Application
         run: |
@@ -54,7 +53,8 @@ jobs:
                      CODE_SIGNING_ALLOWED=NO \
                      CODE_SIGN_IDENTITY="" \
                      CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGN_ENTITLEMENTS=""
+                     CODE_SIGN_ENTITLEMENTS="" \
+                     OTHER_SWIFT_FLAGS='$(inherited) -enable-experimental-feature NonescapableTypes'
 
       - name: Package Payload into Malaabis.ipa
         run: |
