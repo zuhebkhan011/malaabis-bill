@@ -2,6 +2,12 @@ name: Build iOS IPA (Malaabis)
 
 on:
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/build-ios.yml'
 
 jobs:
   build-ios:
@@ -18,6 +24,22 @@ jobs:
         with:
           node-version: 22
 
+      - name: Select Latest Xcode 16 Toolchain
+        run: |
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_16.1.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_16.0.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+          fi
+          xcodebuild -version
+
+      - name: Clean Xcode Caches
+        run: |
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+          rm -rf ~/Library/Caches/org.swift.swiftpm
+
       - name: Install Frontend Dependencies
         run: |
           cd frontend
@@ -33,8 +55,10 @@ jobs:
           cd frontend
           npx cap sync ios
 
-      - name: Verify Active Xcode Version
-        run: xcodebuild -version
+      - name: Resolve Swift Package Manager Dependencies
+        run: |
+          cd frontend/ios/App
+          xcodebuild -project App.xcodeproj -scheme App -resolvePackageDependencies
 
       - name: Verify Xcode Project & Schemes
         run: |
@@ -44,6 +68,7 @@ jobs:
       - name: Build iOS Release Archive (arm64 for Physical Device)
         run: |
           cd frontend/ios/App
+          set -o pipefail
           xcodebuild -project App.xcodeproj \
                      -scheme App \
                      -configuration Release \
@@ -54,7 +79,15 @@ jobs:
                      CODE_SIGN_IDENTITY="" \
                      CODE_SIGNING_REQUIRED=NO \
                      CODE_SIGN_ENTITLEMENTS="" \
-                     OTHER_SWIFT_FLAGS='$(inherited) -enable-experimental-feature NonescapableTypes'
+                     OTHER_SWIFT_FLAGS='$(inherited) -enable-experimental-feature NonescapableTypes' 2>&1 | tee build.log
+
+      - name: Upload Build Log on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcode-build-log
+          path: frontend/ios/App/build.log
+          if-no-files-found: ignore
 
       - name: Package Payload into Malaabis.ipa
         run: |
