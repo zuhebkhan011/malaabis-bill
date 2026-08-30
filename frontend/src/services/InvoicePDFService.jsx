@@ -83,7 +83,7 @@ export const InvoicePDFService = {
 
       const targetEl = container.firstElementChild || container;
 
-      // 4. Capture high-definition canvas with html2canvas
+      // 4. Capture high-definition canvas with html2canvas (strictly isolated from phone screen dimensions)
       const canvas = await html2canvas(targetEl, {
         scale: 2,
         useCORS: true,
@@ -94,6 +94,7 @@ export const InvoicePDFService = {
         scrollY: 0,
         width: 794,
         windowWidth: 794,
+        windowHeight: 1127,
       });
 
       // 5. Build PDF (A5 default on all devices)

@@ -17,7 +17,6 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
   const [customerName, setCustomerName] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
-  const [cashReceived, setCashReceived] = useState("");
   const [discountMode, setDiscountMode] = useState("NONE");
   const [discountValue, setDiscountValue] = useState("");
   const [discountCode, setDiscountCode] = useState("");
@@ -133,15 +132,26 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
 
   const handleBarcodeScan = async (barcode) => {
     const rawBarcode = String(barcode || "").trim();
-    const normalizedBarcode = rawBarcode.toUpperCase();
-    const cleanCode = normalizedBarcode.replace(/^#/, "");
+    if (!rawBarcode) return;
+
+    // 0. Detect and parse QR Code JSON payload (e.g. {"invoiceNo":"MS-M1ABC-1234", ...})
+    let cleanCode = rawBarcode;
+    if (cleanCode.startsWith("{") && cleanCode.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(cleanCode);
+        cleanCode = String(parsed.invoiceNo || parsed.invoiceNumber || parsed.id || parsed.sku || cleanCode).trim();
+      } catch (_) {}
+    }
+
+    const normalizedBarcode = cleanCode.toUpperCase();
+    const strippedCode = normalizedBarcode.replace(/^#/, "");
 
     // 1. Check if scanned barcode matches a product SKU or barcode
     const matchedProduct = products.find(
       (product) =>
         String(product.sku || "").trim().toUpperCase() === normalizedBarcode ||
         String(product.barcode || "").trim().toUpperCase() === normalizedBarcode ||
-        String(product.sku || "").replace(/^#/, "").trim().toUpperCase() === cleanCode
+        String(product.sku || "").replace(/^#/, "").trim().toUpperCase() === strippedCode
     );
 
     if (matchedProduct) {
@@ -151,16 +161,21 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
       return;
     }
 
-    // 2. Check if scanned barcode matches a Bill / Invoice SKU or Number
+    // 2. Check if scanned barcode matches a Bill / Invoice Number, Client ID, or Item SKU
     const matchedInvoice = invoices?.find((inv) => {
       const invNum = String(inv.invoiceNumber || "").replace(/^#/, "").trim().toUpperCase();
       const invId = String(inv._id || "").trim().toUpperCase();
-      const invSku = String(inv.sku || "").trim().toUpperCase();
+      const invClientId = String(inv.clientId || "").trim().toUpperCase();
+      const hasItemSku = (inv.items || []).some((it) => {
+        const itemSku = String(it.sku || "").replace(/^#/, "").trim().toUpperCase();
+        return itemSku === strippedCode || itemSku === normalizedBarcode;
+      });
       return (
-        invNum === cleanCode ||
-        invId === cleanCode ||
-        invSku === cleanCode ||
-        invNum === normalizedBarcode
+        invNum === strippedCode ||
+        invNum === normalizedBarcode ||
+        invId === strippedCode ||
+        invClientId === strippedCode ||
+        hasItemSku
       );
     });
 
@@ -172,10 +187,10 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
       return;
     }
 
-    // 3. Fallback: Query backend API for Bill lookup
+    // 3. Fallback: Query backend API for Bill lookup by invoice number, item SKU, or _id
     try {
       const { getBillById } = await import("../services/billingApi");
-      const remoteBill = await getBillById(cleanCode);
+      const remoteBill = await getBillById(strippedCode);
       if (remoteBill && remoteBill._id) {
         setSavedInvoice(remoteBill);
         setIsInvoicePreviewOpen(true);
@@ -184,7 +199,7 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
         return;
       }
     } catch (_) {
-      // Not a remote bill
+      // Not found as a remote bill
     }
 
     setScanFeedback(`No product or bill found for: ${rawBarcode}`);
@@ -275,9 +290,8 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
       : 0;
   const discountAmount = Math.min(subtotal, manualDiscount + promoDiscount);
   const total = Math.max(0, subtotal - discountAmount);
-  const cashReceivedAmount = Number(cashReceived) || 0;
-  const cashChange =
-    paymentMethod === "CASH" ? Math.max(0, cashReceivedAmount - total) : 0;
+  const cashReceivedAmount = total;
+  const cashChange = 0;
   const isPaymentReady = paymentMethod !== "UPI" || upiPaid;
 
   const handleCreateInvoice = async () => {
@@ -288,10 +302,6 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
     if (paymentMethod === "UPI" && !upiPaid) {
       setSubmitError("Complete the UPI payment first.");
       setIsUpiModalOpen(true);
-      return;
-    }
-    if (paymentMethod === "CASH" && cashReceivedAmount < total) {
-      alert("Cash received must be greater than or equal to the grand total.");
       return;
     }
 
@@ -402,7 +412,7 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
               await offline.saveInvoiceLocally(updatedBill);
               await offline.queueBillUpdate(editBill._id, billPayload);
               savedBill = updatedBill;
-              await onCheckout?.(savedBill);
+              onCheckout?.(savedBill);
             }
           }
         }
@@ -421,11 +431,11 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
             createdAt: new Date().toISOString(),
             offline: true,
           };
-          await onCheckout?.(savedBill);
+          onCheckout?.(savedBill);
         } else {
           try {
             savedBill = await createBill(billPayload);
-            await onCheckout?.(savedBill);
+            onCheckout?.(savedBill);
           } catch (onlineError) {
             console.warn("Online checkout failed, saving invoice offline locally:", onlineError);
             const queued = await offline.queueBill(billPayload);
@@ -436,34 +446,35 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
               createdAt: new Date().toISOString(),
               offline: true,
             };
-            await onCheckout?.(savedBill);
+            onCheckout?.(savedBill);
           }
         }
       }
+
+      // ── Instant UI display: Open invoice preview immediately ──
       setSavedInvoice(savedBill);
       setIsInvoicePreviewOpen(true);
+      setIsSubmitting(false);
 
-      // Auto A4 PDF generation & cloud MongoDB save trigger (triggered faster)
+      // Auto A5 PDF generation & cloud MongoDB save (scheduled in background idle)
       if (savedBill && savedBill._id && !savedBill.offline) {
         setTimeout(async () => {
           try {
-            console.log("Starting background PDF auto-compilation...");
             const { InvoicePDFService } = await import("../services/InvoicePDFService");
             const { uploadBillPDF } = await import("../services/billingApi");
-            const pdfBase64 = await InvoicePDFService.generatePDFBase64(savedBill);
+            const pdfBase64 = await InvoicePDFService.generatePDFBase64(savedBill, "a5");
             await uploadBillPDF(savedBill._id, pdfBase64);
-            console.log("A4 PDF generated & saved in MongoDB successfully!");
+            console.log("A5 PDF generated & saved in MongoDB successfully!");
           } catch (err) {
             console.warn("Background auto PDF generation/upload failed:", err);
           }
-        }, 200);
+        }, 1200);
       }
 
       setCart([]);
       setCustomerName("");
       setCustomerMobile("");
       setPaymentMethod("CASH");
-      setCashReceived("");
       setDiscountMode("NONE");
       setDiscountValue("");
       setDiscountCode("");
@@ -515,12 +526,21 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
     window.open(waUrl, "_blank", "noopener,noreferrer");
   };
 
-  const printInvoice = () => {
-    window.print();
+  const printInvoice = async () => {
+    if (savedInvoice) {
+      try {
+        const { InvoicePDFService } = await import("../services/InvoicePDFService");
+        await InvoicePDFService.printInvoice(savedInvoice, "a5");
+      } catch (_) {
+        window.print();
+      }
+    } else {
+      window.print();
+    }
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-80px)] -mx-container-margin md:mx-0 overflow-hidden animate-fade-in pb-24 md:pb-0">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-80px)] mx-0 overflow-hidden animate-fade-in pb-24 md:pb-0">
       {/* Left Side: POS Cart & Search */}
       <section className="flex-1 flex flex-col h-full bg-[#131313] border-r border-[#4d4635]/10 overflow-hidden p-4 md:p-6">
         <div className="flex flex-col gap-4">
@@ -953,27 +973,9 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
                   </button>
                 ) : null}
                 {paymentMethod === "CASH" && (
-                  <div className="mt-3">
-                    <label className="text-[10px] font-semibold tracking-wider text-outline uppercase mb-2 block">
-                      Cash Received
-                    </label>
-                    <input
-                      className="w-full bg-background text-on-background border border-[#4d4635]/35 rounded-lg px-3 py-2.5 focus:border-primary placeholder:text-[#353535] text-sm focus:outline-none"
-                      placeholder="Enter cash amount"
-                      type="number"
-                      min="0"
-                      value={cashReceived}
-                      onChange={(e) => setCashReceived(e.target.value)}
-                    />
-                    <p className="text-xs text-outline mt-2">
-                      Change: {formatINR(cashChange)}
-                    </p>
-                    {cashReceivedAmount >= total && total > 0 ? (
-                      <p className="text-xs text-primary mt-2 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[16px]">verified</span>
-                        Cash payment ready
-                      </p>
-                    ) : null}
+                  <div className="mt-3 rounded-xl bg-primary/10 border border-primary/20 p-3 flex items-center gap-2.5 text-primary text-xs font-semibold">
+                    <span className="material-symbols-outlined text-base">payments</span>
+                    <span>Direct Cash Payment Selected</span>
                   </div>
                 )}
               </div>
@@ -1015,13 +1017,7 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
             <button
               id="generate-invoice-btn"
               onClick={handleCreateInvoice}
-              disabled={
-                isSubmitting ||
-                !isPaymentReady ||
-                (paymentMethod === "CASH" &&
-                  cashReceivedAmount < total &&
-                  total > 0)
-              }
+              disabled={isSubmitting || !isPaymentReady}
               className="w-full bg-primary text-black font-semibold text-xs uppercase tracking-wider py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#ffe088] transition-all duration-200 active:scale-[0.98] shadow-[0_0_15px_rgba(212,175,55,0.2)] cursor-pointer disabled:opacity-60"
             >
               <span className="material-symbols-outlined text-lg">point_of_sale</span>

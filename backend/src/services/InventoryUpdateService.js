@@ -46,7 +46,12 @@ class InventoryUpdateService {
 
         await productObj.save({ session });
       } else {
-        // 2. Create New Product
+        // 2. Create New Product with guaranteed SKU and Barcode
+        const generatedSku = p.sku && String(p.sku).trim()
+          ? String(p.sku).trim().toUpperCase()
+          : `ML-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+        const finalBarcode = p.barcode && String(p.barcode).trim() ? String(p.barcode).trim() : generatedSku;
+
         const newProductPayload = {
           name: p.name,
           price: Number(p.sellingPrice) || Number(p.purchasePrice), // fallback to purchase price if selling price not set
@@ -54,8 +59,8 @@ class InventoryUpdateService {
           stock: Number(p.quantity),
           category: p.category || "UNSTITCHED",
           brand: p.brand || "",
-          barcode: p.barcode || "",
-          sku: p.sku || "",
+          barcode: finalBarcode,
+          sku: generatedSku,
           imageUrl: p.imageUrl || "",
           images: p.imageUrl ? [p.imageUrl] : [],
           supplier: supplierName,

@@ -86,14 +86,12 @@ function App() {
       setRecentBills(mergedList);
       setSavedInvoices(mergedList);
 
-      // Cache all fetched cloud invoices locally for offline safety
-      try {
-        for (const bill of serverList) {
-          await offline.saveInvoiceLocally(bill);
-        }
-      } catch (cacheErr) {
-        console.warn("Failed to locally cache cloud invoices:", cacheErr);
-      }
+      // Cache fetched cloud invoices locally in background without blocking the main UI thread
+      setTimeout(() => {
+        Promise.all(serverList.slice(0, 30).map((b) => offline.saveInvoiceLocally(b))).catch((cacheErr) => {
+          console.warn("Background local caching error:", cacheErr);
+        });
+      }, 100);
     } catch (error) {
       console.error("Bills API error, falling back to local storage:", error);
       try {
@@ -127,6 +125,12 @@ function App() {
         await fetchProducts();
         await fetchBills();
       })();
+
+      // Pre-warm heavy PDF generation services (jsPDF & html2canvas) in background during idle time
+      const prewarmTimer = setTimeout(() => {
+        import("./services/InvoicePDFService").catch(() => {});
+      }, 1500);
+      return () => clearTimeout(prewarmTimer);
     }
   }, [user]);
 
@@ -353,35 +357,48 @@ function App() {
   const handleBillSaved = async (billData) => {
     setActiveEditBill(null);
     setRecentBills((cur) => [billData, ...cur.filter((b) => b._id !== billData._id && b.clientId !== billData.clientId)]);
-    try {
-      await offline.saveInvoiceLocally(billData);
-      setSavedInvoices((prev) => [billData, ...prev.filter((inv) => inv._id !== billData._id && inv.clientId !== billData.clientId)]);
+    setSavedInvoices((prev) => [billData, ...prev.filter((inv) => inv._id !== billData._id && inv.clientId !== billData.clientId)]);
 
-      if (billData?.offline) {
-        setProducts((cur) => {
-          const byId = {};
-          cur.forEach((p) => (byId[p._id] = p));
-          (billData.items || []).forEach((it) => {
-            const pid = it.product || it._id || it.productId;
-            if (byId[pid]) byId[pid] = { ...byId[pid], stock: Math.max(0, (byId[pid].stock || 0) - (it.quantity || 0)) };
-          });
-          return Object.values(byId);
+    // Instantly update catalog stock in memory so POS displays new counts immediately
+    if (billData?.items?.length) {
+      setProducts((cur) => {
+        const byId = {};
+        cur.forEach((p) => {
+          byId[p._id] = { ...p };
         });
-        for (const it of billData.items || []) {
+        (billData.items || []).forEach((it) => {
           const pid = it.product || it._id || it.productId;
-          const prod = products.find((p) => p._id === pid);
-          if (prod) {
-            const updated = { ...prod, stock: Math.max(0, prod.stock - (it.quantity || 0)) };
-            await offline.queueProductUpdate(updated);
+          if (byId[pid]) {
+            byId[pid].stock = Math.max(0, (byId[pid].stock || 0) - (it.quantity || 0));
           }
-        }
-      } else {
-        await fetchProducts();
-        await fetchBills();
-      }
-    } catch (e) {
-      console.warn("Post-bill handling failed", e);
+        });
+        return Object.values(byId);
+      });
     }
+
+    // Run local cache write and background cloud synchronization asynchronously
+    (async () => {
+      try {
+        await offline.saveInvoiceLocally(billData);
+
+        if (billData?.offline) {
+          for (const it of billData.items || []) {
+            const pid = it.product || it._id || it.productId;
+            const prod = products.find((p) => p._id === pid);
+            if (prod) {
+              const updated = { ...prod, stock: Math.max(0, prod.stock - (it.quantity || 0)) };
+              await offline.queueProductUpdate(updated);
+            }
+          }
+        } else {
+          // Asynchronously refresh without delaying preview presentation
+          fetchProducts().catch(() => {});
+          fetchBills().catch(() => {});
+        }
+      } catch (e) {
+        console.warn("Post-bill async handling failed:", e);
+      }
+    })();
   };
 
   const handleDeleteSavedInvoice = async (id) => {
@@ -497,7 +514,13 @@ function App() {
           />
         )}
         {currentView === "inventory" && (
-          <Inventory products={products} onAddProduct={addProduct} onUpdateProduct={updateProduct} onDeleteProduct={deleteProduct} />
+          <Inventory
+            products={products}
+            onAddProduct={addProduct}
+            onUpdateProduct={updateProduct}
+            onDeleteProduct={deleteProduct}
+            onOpenAIImport={() => setCurrentView("purchase_import")}
+          />
         )}
         {currentView === "reports" && <Reports onRefresh={handleReportRefresh} />}
         {currentView === "saved_invoices" && (

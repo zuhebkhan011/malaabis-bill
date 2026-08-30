@@ -56,7 +56,18 @@ export default function SavedInvoices({ invoices = [], onDelete, onBack, onEdit 
     window.open(waUrl, "_blank", "noopener,noreferrer");
   };
 
-  const printInvoice = () => window.print();
+  const printInvoice = async () => {
+    if (previewInvoice) {
+      try {
+        const { InvoicePDFService } = await import("../services/InvoicePDFService");
+        await InvoicePDFService.printInvoice(previewInvoice, "a5");
+      } catch (_) {
+        window.print();
+      }
+    } else {
+      window.print();
+    }
+  };
 
   // Filter Logic
   const filteredInvoices = invoices.filter((invoice) => {
@@ -276,18 +287,37 @@ export default function SavedInvoices({ invoices = [], onDelete, onBack, onEdit 
         onDetected={async (code) => {
           setIsScannerOpen(false);
           const rawCode = String(code || "").trim();
-          const cleanCode = rawCode.replace(/^#/, "").toLowerCase();
-          const found = invoices.find(
-            (inv) =>
-              (inv.invoiceNumber && inv.invoiceNumber.replace(/^#/, "").trim().toLowerCase() === cleanCode) ||
-              (inv._id && String(inv._id).trim().toLowerCase() === cleanCode) ||
-              (inv.sku && String(inv.sku).trim().toLowerCase() === cleanCode)
-          );
+          if (!rawCode) return;
+
+          // 0. Parse QR Code JSON if scanned
+          let extracted = rawCode;
+          if (extracted.startsWith("{") && extracted.endsWith("}")) {
+            try {
+              const parsed = JSON.parse(extracted);
+              extracted = String(parsed.invoiceNo || parsed.invoiceNumber || parsed.id || parsed.sku || extracted).trim();
+            } catch (_) {}
+          }
+
+          const cleanCode = extracted.replace(/^#/, "").toLowerCase();
+
+          // 1. Search local invoices by invoice number, ID, client ID, or item SKU
+          const found = invoices.find((inv) => {
+            const invNum = String(inv.invoiceNumber || "").replace(/^#/, "").trim().toLowerCase();
+            const invId = String(inv._id || "").trim().toLowerCase();
+            const invClientId = String(inv.clientId || "").trim().toLowerCase();
+            const hasItemSku = (inv.items || []).some((it) => {
+              const itemSku = String(it.sku || "").replace(/^#/, "").trim().toLowerCase();
+              return itemSku === cleanCode;
+            });
+            return invNum === cleanCode || invId === cleanCode || invClientId === cleanCode || hasItemSku;
+          });
+
           if (found) {
             handlePreview(found);
             return;
           }
 
+          // 2. Query remote database by invoice number, item SKU, or _id
           try {
             const { getBillById } = await import("../services/billingApi");
             const remoteBill = await getBillById(cleanCode);
@@ -297,7 +327,7 @@ export default function SavedInvoices({ invoices = [], onDelete, onBack, onEdit 
             }
           } catch (_) {}
 
-          alert(`No invoice found matching barcode / SKU: ${code}`);
+          alert(`No invoice found matching barcode / SKU: ${rawCode}`);
         }}
       />
     </div>

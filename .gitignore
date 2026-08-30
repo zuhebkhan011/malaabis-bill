@@ -51,5 +51,11 @@ modules.xml
 vcs.xml
 /shelf/
 /workspace.xml
+# iOS build artifacts & Xcode user data
+*.xcuserdata/
+*.xcarchive/
+*.ipa
+Payload/
+
 .DS_Store
 Thumbs.db

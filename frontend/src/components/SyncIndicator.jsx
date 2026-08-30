@@ -44,11 +44,11 @@ export default function SyncIndicator({ isOffline, syncStatus, socketStatus }) {
   }
 
   return (
-    <div className="flex items-center gap-3 bg-[#151515] px-3.5 py-1.5 rounded-full border border-[#4d4635]/25 shadow-inner">
+    <div className="flex items-center gap-2 sm:gap-3 bg-[#151515] px-2.5 sm:px-3.5 py-1.5 rounded-full border border-[#4d4635]/25 shadow-inner shrink-0">
       {/* Cloud Local Cache Status */}
-      <div className={`flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase ${cloudCls}`} title={`Database sync: ${cloudLabel}`}>
+      <div className={`flex items-center gap-1 sm:gap-1.5 text-[10px] font-semibold tracking-wider uppercase ${cloudCls}`} title={`Database sync: ${cloudLabel}`}>
         <span className={`material-symbols-outlined text-sm ${syncStatus === 'syncing' ? 'animate-spin' : ''}`}>{cloudIcon}</span>
-        <span>{cloudLabel}</span>
+        <span className="hidden min-[400px]:inline">{cloudLabel}</span>
       </div>
 
       {/* Vertical divider */}
@@ -65,8 +65,8 @@ export default function SyncIndicator({ isOffline, syncStatus, socketStatus }) {
           )}
           <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`}></span>
         </div>
-        <span className="text-[9px] uppercase font-bold tracking-widest text-[#99907c]">
-          {socketStatus === "connected" ? "LIVE" : socketStatus === "connecting" ? "SYNCING" : "LIVE OFFLINE"}
+        <span className="text-[9px] uppercase font-bold tracking-widest text-[#99907c] hidden min-[360px]:inline">
+          {socketStatus === "connected" ? "LIVE" : socketStatus === "connecting" ? "SYNC" : "OFFLINE"}
         </span>
       </div>
     </div>

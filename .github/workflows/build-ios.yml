@@ -1,0 +1,72 @@
+name: Build iOS IPA (Malaabis)
+
+on:
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  build-ios:
+    name: Build Unsigned iOS IPA
+    runs-on: macos-14 # macOS 14 (Sonoma) on Apple Silicon M1/M2 with Xcode 15/16
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci || npm install
+
+      - name: Build Web Application
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Sync Capacitor iOS Platform
+        run: |
+          cd frontend
+          npx cap sync ios
+
+      - name: Verify Xcode Project & Schemes
+        run: |
+          cd frontend/ios/App
+          xcodebuild -project App.xcodeproj -list
+
+      - name: Build iOS Release Archive (arm64 for Physical Device)
+        run: |
+          cd frontend/ios/App
+          xcodebuild -project App.xcodeproj \
+                     -scheme App \
+                     -configuration Release \
+                     -destination 'generic/platform=iOS' \
+                     -archivePath build/App.xcarchive \
+                     archive \
+                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGN_IDENTITY="" \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGN_ENTITLEMENTS=""
+
+      - name: Package Payload into Malaabis.ipa
+        run: |
+          cd frontend/ios/App
+          mkdir -p build/Payload
+          cp -R build/App.xcarchive/Products/Applications/App.app build/Payload/
+          cd build
+          zip -r -y Malaabis.ipa Payload
+          ls -lh Malaabis.ipa
+
+      - name: Upload Malaabis.ipa Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Malaabis-iOS-IPA
+          path: frontend/ios/App/build/Malaabis.ipa
+          if-no-files-found: error
+          retention-days: 14

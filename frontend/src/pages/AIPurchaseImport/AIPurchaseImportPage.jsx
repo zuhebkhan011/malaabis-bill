@@ -366,6 +366,32 @@ export default function AIPurchaseImportPage({ products = [], onBack, onGoToCata
                 </div>
               )}
 
+              {/* Quick Action Banner for Mobile & Desktop */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-primary/10 border border-primary/25 rounded-2xl p-4 shadow-[0_0_20px_rgba(212,175,55,0.08)]">
+                <div>
+                  <h4 className="text-sm font-bold text-primary flex items-center gap-2">
+                    <span className="material-symbols-outlined text-lg">verified</span>
+                    Ready for Catalog Import
+                  </h4>
+                  <p className="text-xs text-secondary mt-0.5">
+                    {invoiceData.products.length} products parsed and ready to save to database.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCommitImport(false)}
+                  disabled={hasNegativeQty}
+                  className={`w-full sm:w-auto px-5 py-3 rounded-xl uppercase tracking-wider text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                    hasNegativeQty
+                      ? "bg-white/5 text-outline cursor-not-allowed border border-white/5"
+                      : "bg-primary text-black hover:bg-[#ffe088] shadow-[0_4px_20px_rgba(242,202,80,0.25)] cursor-pointer active:scale-95"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">add_business</span>
+                  Add to Catalog & Save
+                </button>
+              </div>
+
               <MatchReviewTable 
                 products={invoiceData.products} 
                 onUpdateProduct={handleUpdateProductInList}
@@ -383,27 +409,32 @@ export default function AIPurchaseImportPage({ products = [], onBack, onGoToCata
             </div>
           </div>
 
-          {/* Sticky Bottom Actions Bar */}
-          <div className="fixed bottom-0 left-0 right-0 md:left-72 bg-[#0e0e0e]/95 backdrop-blur-md border-t border-[#4d4635]/20 p-4 flex gap-4 z-40">
+          {/* Sticky Bottom Actions Bar (elevated above mobile nav bar with z-50) */}
+          <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-72 bg-[#0e0e0e]/95 backdrop-blur-md border-t border-[#4d4635]/25 p-3 sm:p-4 flex flex-col sm:flex-row gap-2 sm:gap-4 z-50 shadow-[0_-4px_24px_rgba(0,0,0,0.7)]">
+            <div className="flex gap-2 sm:flex-1">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="flex-1 min-h-[46px] sm:min-h-[50px] rounded-xl border border-white/10 text-white uppercase tracking-wider text-[11px] sm:text-xs font-semibold hover:bg-white/5 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="flex-1 min-h-[46px] sm:min-h-[50px] rounded-xl border border-[#ffe088]/20 bg-[#ffe088]/5 text-[#f2ca50] uppercase tracking-wider text-[11px] sm:text-xs font-semibold hover:bg-[#ffe088]/10 transition-all cursor-pointer"
+              >
+                Review
+              </button>
+            </div>
             <button
-              onClick={handleCancel}
-              className="flex-1 min-h-[50px] rounded-xl border border-white/10 text-white uppercase tracking-wider text-xs font-semibold hover:bg-white/5 transition-all cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCancel}
-              className="flex-1 min-h-[50px] rounded-xl border border-[#ffe088]/20 bg-[#ffe088]/5 text-[#f2ca50] uppercase tracking-wider text-xs font-semibold hover:bg-[#ffe088]/10 transition-all cursor-pointer"
-            >
-              Review Again
-            </button>
-            <button
+              type="button"
               onClick={() => handleCommitImport(false)}
               disabled={hasNegativeQty}
-              className={`flex-[1.5] min-h-[50px] rounded-xl uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              className={`w-full sm:flex-[1.5] min-h-[48px] sm:min-h-[50px] rounded-xl uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 hasNegativeQty 
                   ? "bg-white/5 text-outline cursor-not-allowed border border-white/5" 
-                  : "bg-primary text-black hover:bg-[#ffe088] shadow-[0_4px_20px_rgba(242,202,80,0.25)]"
+                  : "bg-primary text-black hover:bg-[#ffe088] shadow-[0_4px_20px_rgba(242,202,80,0.25)] active:scale-[0.98]"
               }`}
             >
               <span className="material-symbols-outlined text-base">add_business</span>

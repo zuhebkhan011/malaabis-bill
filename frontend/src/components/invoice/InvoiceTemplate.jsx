@@ -24,7 +24,7 @@ const STORE_INFO = {
  * 
  * @param {object} props.invoice - The invoice data object.
  */
-export default function InvoiceTemplate({ invoice }) {
+export default function InvoiceTemplate({ invoice, responsive = false }) {
   if (!invoice) return null;
 
   const items = invoice.items || [];
@@ -46,14 +46,15 @@ export default function InvoiceTemplate({ invoice }) {
     <div
       id="malaabis-invoice-capture"
       style={{
-        width: "794px",
-        minHeight: "1123px",
+        width: responsive ? "100%" : "794px",
+        maxWidth: "794px",
+        minHeight: responsive ? "auto" : "1123px",
         background: "#ffffff",
         color: "#111111",
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        fontSize: "14px",
+        fontSize: responsive ? "13px" : "14px",
         lineHeight: "1.4",
-        padding: "36px 36px 30px 36px",
+        padding: responsive ? "20px 16px" : "36px 36px 30px 36px",
         boxSizing: "border-box",
         position: "relative",
       }}
@@ -165,8 +166,8 @@ export default function InvoiceTemplate({ invoice }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "40px",
+          gridTemplateColumns: responsive ? "repeat(auto-fit, minmax(200px, 1fr))" : "1fr 1fr",
+          gap: responsive ? "16px" : "40px",
           marginBottom: "22px",
           position: "relative",
           zIndex: 1,
@@ -223,8 +224,8 @@ export default function InvoiceTemplate({ invoice }) {
       </div>
 
       {/* ── PRODUCT TABLE ── */}
-      <div style={{ marginBottom: "22px", position: "relative", zIndex: 1 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+      <div style={{ marginBottom: "22px", position: "relative", zIndex: 1, overflowX: responsive ? "auto" : "visible", WebkitOverflowScrolling: "touch" }}>
+        <table style={{ width: "100%", minWidth: responsive ? "460px" : "100%", borderCollapse: "collapse", textAlign: "left" }}>
           <thead>
             <tr style={{ background: "#111111", color: "#ffffff" }}>
               <th style={{ padding: "10px 12px", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.1em" }}>PRODUCT</th>
@@ -275,8 +276,8 @@ export default function InvoiceTemplate({ invoice }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1.1fr 0.9fr",
-          gap: "35px",
+          gridTemplateColumns: responsive ? "repeat(auto-fit, minmax(220px, 1fr))" : "1.1fr 0.9fr",
+          gap: responsive ? "16px" : "35px",
           marginBottom: "22px",
           position: "relative",
           zIndex: 1,
@@ -315,7 +316,7 @@ export default function InvoiceTemplate({ invoice }) {
               <span style={{ color: "#666666" }}>Status:</span>
               <span style={{ fontWeight: "700", color: "#10b981" }}>PAID</span>
             </div>
-            {invoice.paymentMethod === "CASH" && (
+            {invoice.paymentMethod === "CASH" && Number(invoice.cashChange) > 0 && (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "6px" }}>
                   <span style={{ color: "#666666" }}>Cash Tendered:</span>
@@ -369,8 +370,10 @@ export default function InvoiceTemplate({ invoice }) {
       <div
         style={{
           display: "flex",
+          flexWrap: "wrap",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: responsive ? "12px" : "0",
           borderTop: "1px dashed #cccccc",
           borderBottom: "1px dashed #cccccc",
           padding: "16px 0",

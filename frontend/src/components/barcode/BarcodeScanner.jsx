@@ -2,10 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Quagga from "@ericblade/quagga2";
 
 function normalizeBarcode(value) {
-  return String(value || "")
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, "");
+  const str = String(value || "").trim();
+  if (str.startsWith("{") && str.endsWith("}")) {
+    try {
+      const parsed = JSON.parse(str);
+      return String(parsed.invoiceNo || parsed.invoiceNumber || parsed.id || parsed.sku || str).trim().toUpperCase();
+    } catch (_) {}
+  }
+  return str.toUpperCase().replace(/\s+/g, "");
 }
 
 export default function BarcodeScanner({ open, onClose, onDetected }) {
@@ -32,6 +36,7 @@ export default function BarcodeScanner({ open, onClose, onDetected }) {
 
     let mounted = true;
     let hasStarted = false;
+    let barcodeDetectorInterval = null;
 
     const handleDetected = (result) => {
       const code = normalizeBarcode(result?.codeResult?.code);
@@ -121,11 +126,47 @@ export default function BarcodeScanner({ open, onClose, onDetected }) {
         Quagga.start();
         hasStarted = true;
         setStatus("Scanner ready");
+
+        // Ensure iOS WKWebView plays video inline without forcing fullscreen
+        const videoEl = targetElement.querySelector("video");
+        if (videoEl) {
+          videoEl.setAttribute("playsinline", "true");
+          videoEl.setAttribute("webkit-playsinline", "true");
+          videoEl.play().catch(() => {});
+        }
+
+        // Native BarcodeDetector acceleration for QR Codes (e.g. Invoice QR) and 2D/1D codes
+        if (typeof window !== "undefined" && "BarcodeDetector" in window) {
+          try {
+            const detector = new window.BarcodeDetector({
+              formats: ["qr_code", "code_128", "code_39", "ean_13", "ean_8", "upc_a", "upc_e"],
+            });
+
+            barcodeDetectorInterval = setInterval(async () => {
+              if (!mounted) return;
+              const video = targetElement.querySelector("video");
+              if (video && video.readyState >= 2) {
+                try {
+                  const detectedCodes = await detector.detect(video);
+                  if (detectedCodes && detectedCodes.length > 0) {
+                    const rawVal = detectedCodes[0].rawValue;
+                    if (rawVal) {
+                      handleDetected({ codeResult: { code: rawVal } });
+                    }
+                  }
+                } catch (_) {}
+              }
+            }, 250);
+          } catch (_) {}
+        }
       }
     );
 
     return () => {
       mounted = false;
+      if (barcodeDetectorInterval) {
+        clearInterval(barcodeDetectorInterval);
+      }
       if (hasStarted) {
         try {
           Quagga.offDetected(handleDetected);

@@ -10,6 +10,7 @@ export default function Inventory({
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
+  onOpenAIImport,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
@@ -145,7 +146,32 @@ export default function Inventory({
     <div className="space-y-8 animate-fade-in relative pb-20">
       {/* Header section */}
       <div className="flex flex-col gap-4">
-        <h2 className="font-headline text-3xl text-on-surface">Product Catalog</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="font-headline text-2xl sm:text-3xl text-on-surface">Product Catalog</h2>
+            <p className="text-xs text-secondary mt-0.5">Manage products, stock levels, and AI invoices</p>
+          </div>
+          <div className="flex items-center gap-2.5">
+            {onOpenAIImport && (
+              <button
+                type="button"
+                onClick={onOpenAIImport}
+                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider hover:bg-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.1)] active:scale-95"
+              >
+                <span className="material-symbols-outlined text-base">auto_awesome</span>
+                AI Invoice Import
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleOpenCreate}
+              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-primary text-black text-xs font-bold uppercase tracking-wider hover:bg-[#ffe088] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.2)] active:scale-95"
+            >
+              <span className="material-symbols-outlined text-base">add</span>
+              Add Product
+            </button>
+          </div>
+        </div>
 
         {/* Search & Actions */}
         <div className="relative">
@@ -358,7 +384,8 @@ export default function Inventory({
       {/* Floating Action Button (FAB) */}
       <button
         onClick={handleOpenCreate}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-black rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(212,175,55,0.4)] z-40 hover:scale-105 transition-transform duration-200 cursor-pointer"
+        className="fixed bottom-20 left-6 md:bottom-10 md:right-10 md:left-auto w-14 h-14 bg-primary text-black rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(212,175,55,0.4)] z-40 hover:scale-105 active:scale-95 transition-transform duration-200 cursor-pointer"
+        aria-label="Add new product"
       >
         <span className="material-symbols-outlined text-3xl">add</span>
       </button>

@@ -85,45 +85,45 @@ export default function Dashboard({ setView, products = [], recentBills = [] }) 
           <span className="material-symbols-outlined text-primary text-xl">bolt</span>
           Quick Actions
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <button 
             onClick={() => setView("billing")} 
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-[#1C1C1C] border border-[#4d4635]/20 hover:border-primary/50 rounded-xl transition-all duration-200 group cursor-pointer"
+            className="flex flex-col items-center justify-center gap-2 p-3 sm:p-4 bg-[#1C1C1C] border border-[#4d4635]/20 hover:border-primary/50 rounded-xl transition-all duration-200 group cursor-pointer active:scale-95"
           >
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-primary/20">
-              <span className="material-symbols-outlined text-primary">receipt_long</span>
+            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-primary/20">
+              <span className="material-symbols-outlined text-primary text-xl">receipt_long</span>
             </div>
             <span className="text-[10px] font-semibold tracking-wider text-secondary uppercase mt-1">New Bill</span>
           </button>
 
           <button 
-            onClick={() => setView("inventory")} 
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-[#1C1C1C] border border-[#4d4635]/20 hover:border-primary/50 rounded-xl transition-all duration-200 group cursor-pointer"
+            onClick={() => setView("purchase_import")} 
+            className="flex flex-col items-center justify-center gap-2 p-3 sm:p-4 bg-[#1C1C1C] border border-primary/25 hover:border-primary rounded-xl transition-all duration-200 group cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.08)] active:scale-95"
           >
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-primary/20">
-              <span className="material-symbols-outlined text-primary">add_circle</span>
+            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-all border border-primary/30">
+              <span className="material-symbols-outlined text-primary text-xl">auto_awesome</span>
             </div>
-            <span className="text-[10px] font-semibold tracking-wider text-secondary uppercase mt-1">Add Product</span>
+            <span className="text-[10px] font-bold tracking-wider text-primary uppercase mt-1">AI Import</span>
           </button>
 
           <button 
-            onClick={() => setView("reports")} 
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-[#1C1C1C] border border-[#4d4635]/20 hover:border-primary/50 rounded-xl transition-all duration-200 group cursor-pointer"
+            onClick={() => setView("saved_invoices")} 
+            className="flex flex-col items-center justify-center gap-2 p-3 sm:p-4 bg-[#1C1C1C] border border-[#4d4635]/20 hover:border-primary/50 rounded-xl transition-all duration-200 group cursor-pointer active:scale-95"
           >
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-primary/20">
-              <span className="material-symbols-outlined text-primary">bar_chart</span>
+            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-primary/20">
+              <span className="material-symbols-outlined text-primary text-xl">barcode_scanner</span>
             </div>
-            <span className="text-[10px] font-semibold tracking-wider text-secondary uppercase mt-1">Stock Report</span>
+            <span className="text-[10px] font-semibold tracking-wider text-secondary uppercase mt-1">Invoices & Scan</span>
           </button>
 
           <button 
             onClick={() => setView("inventory")} 
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-[#1C1C1C] border border-[#4d4635]/20 hover:border-primary/50 rounded-xl transition-all duration-200 group cursor-pointer"
+            className="flex flex-col items-center justify-center gap-2 p-3 sm:p-4 bg-[#1C1C1C] border border-[#4d4635]/20 hover:border-primary/50 rounded-xl transition-all duration-200 group cursor-pointer active:scale-95"
           >
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-primary/20">
-              <span className="material-symbols-outlined text-primary">inventory</span>
+            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-primary/20">
+              <span className="material-symbols-outlined text-primary text-xl">inventory_2</span>
             </div>
-            <span className="text-[10px] font-semibold tracking-wider text-secondary uppercase mt-1">View Stock</span>
+            <span className="text-[10px] font-semibold tracking-wider text-secondary uppercase mt-1">Catalog</span>
           </button>
         </div>
       </section>

@@ -128,18 +128,23 @@ const createBill = async (req, res) => {
       }
     }
 
-    // Deduct stocks in parallel to optimize response time
-    await Promise.all(stockChanges.map(async (change) => {
-      const updatedProduct = await Product.findByIdAndUpdate(
-        change.productId,
-        { stock: change.nextStock },
-        { new: true }
+    // Deduct stocks in a single round-trip with bulkWrite to optimize response time
+    if (stockChanges.length > 0) {
+      await Product.bulkWrite(
+        stockChanges.map((change) => ({
+          updateOne: {
+            filter: { _id: change.productId },
+            update: { $set: { stock: change.nextStock } },
+          },
+        }))
       );
-      if (req.io && updatedProduct) {
-        req.io.emit("stock-updated", { productId: change.productId, stock: change.nextStock });
-        req.io.emit("product-updated", updatedProduct);
+
+      if (req.io) {
+        stockChanges.forEach((change) => {
+          req.io.emit("stock-updated", { productId: change.productId, stock: change.nextStock });
+        });
       }
-    }));
+    }
 
     const savedBill = await Bill.create({
       invoiceNumber: buildInvoiceNumber(),
@@ -439,9 +444,15 @@ const updateBill = async (req, res) => {
   }
 };
 
+const escapeRegex = (str) => String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const getBills = async (_req, res) => {
   try {
-    const bills = await Bill.find().sort({ createdAt: -1 });
+    // Exclude large pdfData strings from list view for high performance
+    const bills = await Bill.find()
+      .select("-pdfData")
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(bills);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -499,7 +510,17 @@ const deleteBill = async (req, res) => {
 const getBillById = async (req, res) => {
   try {
     const { id } = req.params;
-    const cleanId = String(id || "").replace(/^#/, "").trim();
+    let cleanId = String(id || "").trim();
+
+    // Check if input is a JSON string (e.g. scanned from Bill QR Code)
+    if (cleanId.startsWith("{") && cleanId.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(cleanId);
+        cleanId = String(parsed.invoiceNo || parsed.invoiceNumber || parsed.id || cleanId).trim();
+      } catch (_) {}
+    }
+
+    cleanId = cleanId.replace(/^#/, "").trim();
     const mongoose = require("mongoose");
 
     let bill = null;
@@ -508,13 +529,19 @@ const getBillById = async (req, res) => {
     }
 
     if (!bill) {
+      const escaped = escapeRegex(cleanId);
       bill = await Bill.findOne({
         $or: [
           { invoiceNumber: cleanId },
           { invoiceNumber: `#${cleanId}` },
-          { invoiceNumber: { $regex: new RegExp(`^#?${cleanId}$`, "i") } }
+          { invoiceNumber: { $regex: new RegExp(`^#?${escaped}$`, "i") } },
+          { clientId: cleanId },
+          { "items.sku": cleanId },
+          { "items.sku": { $regex: new RegExp(`^${escaped}$`, "i") } },
         ]
-      }).lean();
+      })
+      .sort({ createdAt: -1 })
+      .lean();
     }
 
     if (!bill) {

@@ -38,7 +38,7 @@ function BottomNavItem({ active, icon, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all cursor-pointer min-h-[56px] min-w-[56px] ${
+      className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all cursor-pointer min-h-[50px] max-w-[76px] ${
         active ? "text-primary scale-105" : "text-secondary hover:text-primary"
       }`}
     >
@@ -48,7 +48,7 @@ function BottomNavItem({ active, icon, label, onClick }) {
       >
         {icon}
       </span>
-      <span className="text-[9px] font-semibold uppercase tracking-wider mt-1">{label}</span>
+      <span className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider mt-0.5 truncate max-w-full">{label}</span>
     </button>
   );
 }
@@ -394,7 +394,7 @@ export default function AppShell({
       {/* 4. Main Page Container */}
       <div className="flex-grow flex flex-col h-screen overflow-hidden">
         {/* Header Bar */}
-        <header className="bg-[#131313] border-b border-[#4d4635]/15 flex justify-between items-center px-4 md:px-6 py-3 w-full z-30 shrink-0">
+        <header className="bg-[#131313] border-b border-[#4d4635]/15 flex justify-between items-center px-3 sm:px-4 md:px-6 py-3 pt-safe w-full z-30 shrink-0">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Malaabis Studio" className="h-12 w-auto object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]" />
             <h1 className="font-headline text-base md:text-lg tracking-widest text-primary">MALAABIS STUDIO</h1>
@@ -449,7 +449,7 @@ export default function AppShell({
         </header>
 
         {/* Content Render viewport */}
-        <main className="flex-grow overflow-y-auto px-4 md:px-6 py-6 md:py-8 relative scroll-smooth pb-scroll-safe md:pb-8">
+        <main className="flex-grow overflow-y-auto px-3 sm:px-4 md:px-6 py-4 md:py-8 relative scroll-smooth pb-scroll-safe md:pb-8">
           {children}
         </main>
 

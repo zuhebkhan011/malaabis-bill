@@ -1,8 +1,14 @@
 {
   "appId": "com.malaabis.pos",
-  "appName": "Malaabis Studio",
+  "appName": "Malaabis",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "iosScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile",
+    "limitsNavigationsToAppBoundDomains": false
   }
 }
