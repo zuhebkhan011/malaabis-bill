@@ -35,6 +35,9 @@ jobs:
           cd frontend
           npx cap sync ios
 
+      - name: Select Xcode 15.4 Toolchain
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
       - name: Verify Xcode Project & Schemes
         run: |
           cd frontend/ios/App
