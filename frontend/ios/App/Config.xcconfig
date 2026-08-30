@@ -1,4 +1,4 @@
 // Xcode build configuration for Malaabis iOS
 SWIFT_VERSION = 5.0
 SWIFT_STRICT_CONCURRENCY = minimal
-OTHER_SWIFT_FLAGS = $(inherited) -enable-upcoming-feature NonescapableTypes
+OTHER_SWIFT_FLAGS = $(inherited) -enable-experimental-feature NonescapableTypes
