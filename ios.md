@@ -15,7 +15,7 @@ The Malaabis project is fully prepared and synced for iOS using modern Capacitor
 - **Deployment Target**: iOS 15.0+ (compatible with iPhone and iPad)
 - **Active Native Plugins**:
   - `@capacitor/filesystem@8.1.2` (for PDF document generation and file caching)
-  - `@capacitor/share@8.0.1` (for native iOS Share Sheet, AirPrint, and file export)
+  - Native Web Share API (`navigator.share` / `UIActivityViewController` directly via WKWebView for native iOS Share Sheet, AirDrop, Messages, WhatsApp, and file export)
 
 ### Pre-Configured Permissions (`Info.plist`)
 File: `frontend/ios/App/App/Info.plist`

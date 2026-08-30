@@ -7,7 +7,6 @@ import { formatINR } from "../../utils/currency";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Share } from "@capacitor/share";
 
 /**
  * InvoicePDF
