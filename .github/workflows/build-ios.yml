@@ -30,6 +30,34 @@ jobs:
           cd frontend
           npm run build
 
+      - name: Patch Capacitor Share iOS Plugin for CI Build
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          plugin_file = Path("frontend/node_modules/@capacitor/share/ios/Sources/SharePlugin/SharePlugin.swift")
+          code = plugin_file.read_text()
+
+          replacements = {
+              'if let text = call.getString("text") {': 'if let text = call.options["text"] as? String {',
+              'if let url = call.getString("url"), let urlObj = URL(string: url) {': 'if let url = call.options["url"] as? String, let urlObj = URL(string: url) {',
+              'let title = call.getString("title")': 'let title = call.options["title"] as? String',
+              'if let files = call.getArray("files") {': 'if let files = call.options["files"] as? [Any] {',
+              'call.reject("Must provide at least url, text or files")': 'call.errorHandler(CAPPluginCallError(message: "Must provide at least url, text or files", code: nil, error: nil, data: nil))',
+              'call.reject("Error sharing item", nil, activityError)': 'call.errorHandler(CAPPluginCallError(message: "Error sharing item", code: nil, error: activityError, data: nil))',
+              'call.reject("Share canceled")': 'call.errorHandler(CAPPluginCallError(message: "Share canceled", code: nil, error: nil, data: nil))',
+              'call.reject("Can\'t share while sharing is in progress")': 'call.errorHandler(CAPPluginCallError(message: "Can\'t share while sharing is in progress", code: nil, error: nil, data: nil))'
+          }
+
+          for old, new in replacements.items():
+              if old not in code:
+                  raise SystemExit(f"Expected pattern not found in SharePlugin.swift: {old}")
+              code = code.replace(old, new)
+
+          plugin_file.write_text(code)
+          print(f"Patched {plugin_file}")
+          PY
+
       - name: Sync Capacitor iOS Platform
         run: |
           cd frontend
