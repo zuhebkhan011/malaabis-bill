@@ -84,8 +84,17 @@ jobs:
         if: failure()
         run: |
           cd frontend/ios/App
-          echo "=== XCODEBUILD ERRORS ==="
-          grep -C 3 -i "error:" build.log || tail -n 100 build.log
+          node -e '
+          const fs = require("fs");
+          if (fs.existsSync("build.log")) {
+            const lines = fs.readFileSync("build.log", "utf8").split("\n");
+            const errors = lines.filter(l => l.includes("error:"));
+            console.log("=== TOTAL ERRORS FOUND: " + errors.length + " ===");
+            for (const err of errors.slice(0, 20)) {
+              console.log("::error::" + err.trim());
+            }
+          }
+          '
 
       - name: Upload Build Log on Failure
         if: failure()
