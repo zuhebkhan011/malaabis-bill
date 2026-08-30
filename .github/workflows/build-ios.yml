@@ -78,8 +78,14 @@ jobs:
                      CODE_SIGNING_ALLOWED=NO \
                      CODE_SIGN_IDENTITY="" \
                      CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGN_ENTITLEMENTS="" \
-                     OTHER_SWIFT_FLAGS='$(inherited) -enable-experimental-feature NonescapableTypes' 2>&1 | tee build.log
+                     CODE_SIGN_ENTITLEMENTS="" 2>&1 | tee build.log
+
+      - name: Print Error Summary on Failure
+        if: failure()
+        run: |
+          cd frontend/ios/App
+          echo "=== XCODEBUILD ERRORS ==="
+          grep -C 3 -i "error:" build.log || tail -n 100 build.log
 
       - name: Upload Build Log on Failure
         if: failure()
