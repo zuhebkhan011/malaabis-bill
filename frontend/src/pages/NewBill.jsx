@@ -71,22 +71,38 @@ export default function NewBill({ products = [], invoices = [], onCheckout, edit
   }, [editBill]);
 
   const categories = useMemo(() => {
-    const set = new Set(products.map((p) => p.category).filter(Boolean));
+    if (!products || !Array.isArray(products)) return ["ALL"];
+    const set = new Set(products.map((p) => p?.category).filter(Boolean));
     return ["ALL", ...Array.from(set)];
   }, [products]);
 
-  const filteredProducts = useMemo(() => {
+  const searchResults = useMemo(() => {
+    if (!searchQuery || !products || !Array.isArray(products)) {
+      return [];
+    }
+    const query = String(searchQuery).trim().toLowerCase();
+    if (!query) {
+      return [];
+    }
     return products.filter((p) => {
+      if (!p) return false;
       const matchesCategory =
         selectedCategory === "ALL" || p.category === selectedCategory;
+
+      const nameStr = p.name ? String(p.name).toLowerCase() : "";
+      const skuStr = p.sku ? String(p.sku).toLowerCase() : "";
+      const barcodeStr = p.barcode ? String(p.barcode).toLowerCase() : "";
+
       const matchesSearch =
-        !searchQuery ||
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (p.barcode && p.barcode.toLowerCase().includes(searchQuery.toLowerCase()));
+        nameStr.includes(query) ||
+        skuStr.includes(query) ||
+        barcodeStr.includes(query);
+
       return matchesCategory && matchesSearch;
     });
   }, [products, selectedCategory, searchQuery]);
+
+  const filteredProducts = searchResults;
 
   useEffect(() => {
     if (paymentMethod === "UPI") {

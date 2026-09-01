@@ -131,9 +131,14 @@ export default function Inventory({
   };
 
   const filteredProducts = products.filter((product) => {
+    if (!product) return false;
+    const searchStr = (searchTerm || "").toLowerCase();
+    const nameStr = (product.name || "").toLowerCase();
+    const skuStr = (product.sku || "").toLowerCase();
+
     const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+      nameStr.includes(searchStr) ||
+      skuStr.includes(searchStr);
 
     const matchesCategory =
       selectedCategory === "ALL" ||
